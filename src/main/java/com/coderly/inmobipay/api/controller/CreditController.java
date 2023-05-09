@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,14 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "credit")
 @AllArgsConstructor
-@Tag(name = "Credit")
+//@Tag(name = "Credit")
 public class CreditController {
     private final ICreditService creditService;
 
-    @ApiResponse(responseCode = "400", description = "When the request have a invalid field, the API response this ", content = {
-            @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-    })
-    @Operation(summary = "Save in system a credit information")
+//    @ApiResponse(responseCode = "400", description = "When the request have a invalid field, the API response this ", content = {
+//            @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+//    })
+//    @Operation(summary = "Save in system a credit information")
     @PostMapping
     public ResponseEntity<CreditResponses> post(@Valid @RequestBody CreditRequest creditRequest) {
         return ResponseEntity.ok(creditService.create(creditRequest));
