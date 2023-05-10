@@ -52,23 +52,26 @@ public class UserController {
     @PostMapping("auth/register")
     public ResponseEntity<String> register(@RequestBody RegisterUserRequest signUpRequest) {
 
-        // Check 1: username
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
                     .body("Error: Username is already taken!");
         }
 
-        // Check 2: email
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
                     .body("Error: Email is already in use!");
         }
 
-        RoleEntity rol = rolRepository.findByName("USER").orElseThrow(() -> new UsernameNotFoundException("User Not Found with username "));
+        RoleEntity rol = rolRepository.findByName("USER");
 
-        // Create new user's account
+        if (rol == null){
+            return ResponseEntity
+                    .badRequest()
+                    .body("Error: Rol doesn't exist");
+        }
+
         UserEntity user = UserEntity.builder()
                 .username(signUpRequest.getUsername())
                 .names(signUpRequest.getNames())

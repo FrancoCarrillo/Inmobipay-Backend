@@ -1,9 +1,11 @@
 package com.coderly.inmobipay.api.config;
 
 import com.coderly.inmobipay.infraestructure.services.UserService;
+import com.coderly.inmobipay.utils.exceptions.ForbiddenException;
 import com.coderly.inmobipay.utils.security.jwt.JwtAuthEntryPoint;
 import com.coderly.inmobipay.utils.security.jwt.JwtRequestFilter;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,10 +33,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private UserService userService;
     private JwtAuthEntryPoint unauthorizedHandler;
+    private ForbiddenException forbiddenException;
 
     // ================ CREACIÓN DE BEANS ======================
     @Bean
-    public JwtRequestFilter authenticationJwtTokenFilter() {
+    public JwtRequestFilter authenticationJwtTokenFilter() throws Exception {
         return new JwtRequestFilter();
     }
 
@@ -83,6 +86,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(unauthorizedHandler)
+                .accessDeniedHandler(forbiddenException)
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
