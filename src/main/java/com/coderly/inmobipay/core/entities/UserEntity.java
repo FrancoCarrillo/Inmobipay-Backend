@@ -1,6 +1,7 @@
 package com.coderly.inmobipay.core.entities;
 
 import javax.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,7 @@ import java.util.*;
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID Id;
+    private Long id;
     private String username;
     private String names;
     private String lastNames;
@@ -25,17 +26,14 @@ public class UserEntity {
     private String dni;
     private String password;
 
-    @ManyToMany(cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE
-    })
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "user_rol",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "rol_id")
     )
     private Set<RoleEntity> roles = new HashSet<>();
 
-    public Set<String> getRolName(){
+    public Set<String> getRolName() {
         Set<String> rolesName = new HashSet<>();
 
         roles.forEach(role -> {

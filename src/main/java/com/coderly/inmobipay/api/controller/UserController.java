@@ -3,7 +3,9 @@ package com.coderly.inmobipay.api.controller;
 import com.coderly.inmobipay.api.model.requests.LoginRequest;
 import com.coderly.inmobipay.api.model.requests.RegisterUserRequest;
 import com.coderly.inmobipay.api.model.responses.LogInResponse;
+import com.coderly.inmobipay.core.entities.RoleEntity;
 import com.coderly.inmobipay.core.entities.UserEntity;
+import com.coderly.inmobipay.core.repositories.RolRepository;
 import com.coderly.inmobipay.core.repositories.UserRepository;
 import com.coderly.inmobipay.utils.security.jwt.JwtTokenUtil;
 import lombok.AllArgsConstructor;
@@ -13,11 +15,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @RestController
 @RequestMapping("api/user")
@@ -25,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final AuthenticationManager authManager;
     private final UserRepository userRepository;
+    private final RolRepository rolRepository;
     private final PasswordEncoder encoder;
     private final JwtTokenUtil jwtTokenUtil;
 
@@ -59,6 +66,8 @@ public class UserController {
                     .body("Error: Email is already in use!");
         }
 
+        RoleEntity rol = rolRepository.findByName("USER").orElseThrow(() -> new UsernameNotFoundException("User Not Found with username "));
+
         // Create new user's account
         UserEntity user = UserEntity.builder()
                 .username(signUpRequest.getUsername())
@@ -69,6 +78,11 @@ public class UserController {
                 .dni(signUpRequest.getDni())
                 .password(encoder.encode(signUpRequest.getPassword()))
                 .build();
+
+        Set<RoleEntity> roles = new HashSet<>();
+        roles.add(rol);
+
+        user.setRoles(roles);
 
         userRepository.save(user);
 

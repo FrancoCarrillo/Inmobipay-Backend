@@ -20,8 +20,8 @@ import java.util.UUID;
 @Builder
 public class CreditEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID Id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long Id;
     private BigDecimal PropertyValue;
     private Integer LoanTerm;
     private LocalDate DisbursementDate;
