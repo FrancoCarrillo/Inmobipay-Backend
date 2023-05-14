@@ -2,17 +2,16 @@ package com.coderly.inmobipay.core.entities;
 
 import javax.persistence.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.*;
 
 @Entity(name = "user")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@With
 @Builder
 public class UserEntity {
     @Id

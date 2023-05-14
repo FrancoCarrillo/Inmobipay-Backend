@@ -7,6 +7,7 @@ import com.coderly.inmobipay.core.entities.RoleEntity;
 import com.coderly.inmobipay.core.entities.UserEntity;
 import com.coderly.inmobipay.core.repositories.RolRepository;
 import com.coderly.inmobipay.core.repositories.UserRepository;
+import com.coderly.inmobipay.utils.exceptions.NotFoundException;
 import com.coderly.inmobipay.utils.security.jwt.JwtTokenUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,23 +53,17 @@ public class UserController {
     public ResponseEntity<String> register(@RequestBody RegisterUserRequest signUpRequest) {
 
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Error: Username is already taken!");
+            throw new NotFoundException("Username already in use");
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Error: Email is already in use!");
+            throw new NotFoundException("Email is already in use");
         }
 
         RoleEntity rol = rolRepository.findByName("USER");
 
         if (rol == null){
-            return ResponseEntity
-                    .badRequest()
-                    .body("Error: Rol doesn't exist");
+            throw new NotFoundException("Rol doesn't exist");
         }
 
         UserEntity user = UserEntity.builder()
