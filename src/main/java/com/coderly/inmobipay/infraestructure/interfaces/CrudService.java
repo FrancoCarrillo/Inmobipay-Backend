@@ -2,7 +2,7 @@ package com.coderly.inmobipay.infraestructure.interfaces;
 
 public interface CrudService<RQ, RS, ID> {
 
-    RS create(RQ request);
+    String create(RQ request);
 
     RS read(ID id);
 

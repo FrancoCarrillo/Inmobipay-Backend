@@ -14,7 +14,7 @@ import java.util.UUID;
 @Data
 @Builder
 public class CreditResponses {
-    private UUID Id;
+    private Long Id;
     private BigDecimal PropertyValue;
     private Integer LoanTerm;
     private LocalDate DisbursementDate;

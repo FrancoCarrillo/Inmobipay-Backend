@@ -31,10 +31,13 @@ public class CreditController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
     })
     @Operation(summary = "Save in system a credit information", security = { @SecurityRequirement(name = "bearer-key") })
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
-    public ResponseEntity<CreditResponses> post(@Valid @RequestBody CreditRequest creditRequest) {
+    public ResponseEntity<String> saveCreditInformation(@Valid @RequestBody CreditRequest creditRequest) {
         return ResponseEntity.ok(creditService.create(creditRequest));
     }
 
+    public ResponseEntity<String> getPaymentSchedule(){
+        return ResponseEntity.ok("GAAA");
+    }
 }
