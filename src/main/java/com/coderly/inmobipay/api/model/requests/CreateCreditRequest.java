@@ -1,28 +1,15 @@
 package com.coderly.inmobipay.api.model.requests;
 
-import javax.persistence.Column;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.validation.constraints.Max;
-
-import com.coderly.inmobipay.core.entities.CurrencyEntity;
-import com.coderly.inmobipay.core.entities.GracePeriodEntity;
-import com.coderly.inmobipay.core.entities.InterestRateEntity;
-import com.coderly.inmobipay.core.entities.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class CreditRequest {
+public class CreateCreditRequest {
     private double rate;
     private Integer amountPayments;
     private double propertyValue;
@@ -38,4 +25,5 @@ public class CreditRequest {
     private String bank;
     private Boolean isGoodPayerBonus;
     private Boolean isGreenBonus;
+    private Long userId;
 }

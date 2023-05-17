@@ -1,5 +1,6 @@
 package com.coderly.inmobipay.api.controller;
 
+import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
 import com.coderly.inmobipay.infraestructure.interfaces.ICreditService;
@@ -32,7 +33,7 @@ public class CreditController {
     @Operation(summary = "Save in system a credit information", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
     @PostMapping
-    public ResponseEntity<String> saveCreditInformation(@Valid @RequestBody CreditRequest creditRequest) {
+    public ResponseEntity<String> saveCreditInformation(@Valid @RequestBody CreateCreditRequest creditRequest) {
         return ResponseEntity.ok(creditService.create(creditRequest));
     }
     @Operation(summary = "Get payment schedule", security = {@SecurityRequirement(name = "bearer-key")})

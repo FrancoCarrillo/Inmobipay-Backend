@@ -1,5 +1,6 @@
 package com.coderly.inmobipay.infraestructure.services;
 
+import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
 import com.coderly.inmobipay.core.entities.*;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +32,9 @@ public class CreditService implements ICreditService {
     private final CurrencyRepository currencyRepository;
 
     @Override
-    public String create(CreditRequest request) {
+    public String create(CreateCreditRequest request) {
 
+        // TODO: AGREGAR CAMPOS FALTANTES A LA TABLA DE CREDITOS
         try {
             UserEntity user = userRepository.findById(request.getUserId()).orElseThrow(() -> new NotFoundException("User doesn't exist"));
             InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
@@ -70,6 +73,44 @@ public class CreditService implements ICreditService {
     @Override
     public List<CreditResponses> getMonthlyPayment(CreditRequest request) {
 
+        // TODO: VALIDAR LA MONEDA DE SOL A DOLARES
+        // TODO: TASA DE INTERES CONVERTIR SI ES NOMINAL
+        // TODO: REALIZAR EL PERIODO DE GRACIA
+
+        /*
+        * JSON DE PRUEBAS {
+              "rate": 10.5,
+              "amountPayments": 240,
+              "propertyValue": 200000,
+              "loanAmount": 150000,
+              "lienInsurance": 0.0280,
+              "allRiskInsurance": 0.30,
+              "isPhysicalShipping": false,
+              "monthsGracePeriod": 0,
+              "isTotal": false,
+              "isPartial": false,
+              "interestRateType": "efectiva",
+              "currencyName": "sol",
+              "bank": "interbank",
+              "isGoodPayerBonus": true,
+              "isGreenBonus": true
+            }
+        */
+
+        if (request.getIsGoodPayerBonus()) {
+            if (request.getPropertyValue() < 93100 && request.getPropertyValue() > 65200)
+                request.setLoanAmount(request.getLoanAmount() - 25700);
+            else if (request.getPropertyValue() < 139400 && request.getPropertyValue() > 93100)
+                request.setLoanAmount(request.getLoanAmount() - 214000);
+            else if (request.getPropertyValue() < 232200 && request.getPropertyValue() > 139400)
+                request.setLoanAmount(request.getLoanAmount() - 19600);
+            else if (request.getPropertyValue() < 343900 && request.getPropertyValue() > 232200)
+                request.setLoanAmount(request.getLoanAmount() - 10800);
+        }
+
+        if (request.getIsGreenBonus())
+            request.setLoanAmount(request.getLoanAmount() - 5400);
+
         if (request.getBank().equalsIgnoreCase("interbank")) {
             return getSchedulePaymentOfInterbank(request);
         } else if (request.getBank().equalsIgnoreCase("bcp")) {
@@ -80,21 +121,6 @@ public class CreditService implements ICreditService {
 
     }
 
-    @Override
-    public CreditResponses read(Long aLong) {
-        return null;
-    }
-
-    @Override
-    public CreditResponses update(CreditRequest request, Long aLong) {
-        return null;
-    }
-
-    @Override
-    public void delete(Long aLong) {
-
-    }
-
     private List<CreditResponses> getSchedulePaymentOfInterbank(CreditRequest request) {
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
@@ -102,6 +128,7 @@ public class CreditService implements ICreditService {
         double monthlyEffectiveRate = Math.pow((1 + dailyEffectiveRate), 30) - 1;
         double loanAmount = request.getLoanAmount();
         double monthlyAllRiskInsurance = request.getPropertyValue() * ((request.getAllRiskInsurance() / 100) / 12);
+        double monthlyPhysicalShipping = request.getIsPhysicalShipping() ? 11.00 : 0.00;
 
         for (short i = 0; i < request.getAmountPayments(); i++) {
             double monthlyInterest = loanAmount * monthlyEffectiveRate;
@@ -111,18 +138,18 @@ public class CreditService implements ICreditService {
             double fee = loanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -(request.getAmountPayments() - i))));
 
             double amortization = fee - monthlyInterest - monthlyLienInsurance;
-            double monthlyFee = fee + monthlyAllRiskInsurance;
+            double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping;
 
             creditResponsesList.add(CreditResponses
                     .builder()
                     .id(i + 1)
-                    .initialBalance(loanAmount)
-                    .amortization(amortization)
-                    .interest(monthlyInterest)
-                    .lien_insurance(monthlyLienInsurance)
-                    .allRiskInsurance(monthlyAllRiskInsurance)
-                    .commission(0)
-                    .fee(monthlyFee)
+                    .initialBalance(roundTwoDecimals(loanAmount))
+                    .amortization(roundTwoDecimals(amortization))
+                    .interest(roundTwoDecimals(monthlyInterest))
+                    .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
+                    .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
+                    .commission(roundTwoDecimals(monthlyPhysicalShipping))
+                    .fee(roundTwoDecimals(monthlyFee))
                     .build());
 
             loanAmount -= amortization;
@@ -131,7 +158,6 @@ public class CreditService implements ICreditService {
 
         return creditResponsesList;
     }
-
 
     private List<CreditResponses> getSchedulePaymentOfBCP(CreditRequest request) {
 
@@ -173,5 +199,10 @@ public class CreditService implements ICreditService {
 
         return creditResponsesList;
 
+    }
+
+    private double roundTwoDecimals(double d) {
+        DecimalFormat twoDForm = new DecimalFormat("#.##");
+        return Double.parseDouble(twoDForm.format(d));
     }
 }
