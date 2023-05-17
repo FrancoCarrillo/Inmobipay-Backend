@@ -18,6 +18,9 @@ public class CreditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String name;
+
     private double rate;
 
     @Column(name = "amount_payments")
