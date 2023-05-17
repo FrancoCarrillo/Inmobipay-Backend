@@ -23,11 +23,12 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class CreditRequest {
-    private Double rate;
+    private double rate;
     private Integer amountPayments;
-    private BigDecimal loanAmount;
-    private Double lienInsurance;
-    private Double allRiskInsurance;
+    private double propertyValue;
+    private double loanAmount;
+    private double lienInsurance;
+    private double allRiskInsurance;
     private Boolean isPhysicalShipping;
     private Long userId;
     private Boolean isTotal;
