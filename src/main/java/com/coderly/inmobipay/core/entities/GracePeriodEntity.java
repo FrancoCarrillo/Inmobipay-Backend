@@ -2,25 +2,25 @@ package com.coderly.inmobipay.core.entities;
 
 import lombok.*;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity(name = "grace_period")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@With
+@Builder
 public class GracePeriodEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer amount_months;
+    @Column(name = "amount_months")
+    private Integer amountMonths;
 
-    private Boolean is_total;
+    @Column(name = "is_total")
+    private Boolean isTotal;
 
-    private Boolean is_partial;
+    @Column(name = "is_partial")
+    private Boolean isPartial;
 }

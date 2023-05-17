@@ -13,24 +13,27 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@With
+@Builder
 public class CreditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Double rate;
+
+    private String name;
+
+    private double rate;
 
     @Column(name = "amount_payments")
     private Integer amountPayments;
 
     @Column(name = "loan_amount")
-    private BigDecimal loanAmount;
+    private double loanAmount;
 
     @Column(name = "lien_insurance")
-    private Double lienInsurance;
+    private double lienInsurance;
 
     @Column(name = "all_risk_insurance")
-    private Double allRiskInsurance;
+    private double allRiskInsurance;
 
     @Column(name = "is_physical_shipping")
     private Boolean isPhysicalShipping;
