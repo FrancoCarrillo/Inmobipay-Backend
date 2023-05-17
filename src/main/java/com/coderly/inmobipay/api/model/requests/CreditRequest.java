@@ -35,4 +35,5 @@ public class CreditRequest {
     private Boolean isPartial;
     private String interestRateType;
     private String currencyName;
+    private String bank;
 }

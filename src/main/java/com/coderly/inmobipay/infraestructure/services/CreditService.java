@@ -70,8 +70,14 @@ public class CreditService implements ICreditService {
     @Override
     public List<CreditResponses> getMonthlyPayment(CreditRequest request) {
 
-//        return getSchedulePaymentOfScotiabank(request);
-        return getSchedulePaymentOfBCP(request);
+        if (request.getBank().equalsIgnoreCase("interbank")) {
+            return getSchedulePaymentOfInterbank(request);
+        } else if (request.getBank().equalsIgnoreCase("bcp")) {
+            return getSchedulePaymentOfBCP(request);
+        } else {
+            throw new NotFoundException("El banco seleccionado no existe en el sistema");
+        }
+
     }
 
     @Override
@@ -89,34 +95,37 @@ public class CreditService implements ICreditService {
 
     }
 
-    private List<CreditResponses> getSchedulePaymentOfScotiabank(CreditRequest request) {
+    private List<CreditResponses> getSchedulePaymentOfInterbank(CreditRequest request) {
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
-        double tem = Math.pow((1 + (request.getRate() / 100)), (double) 1 / 12) - 1;
-        double allRiskInsurance = (request.getAllRiskInsurance() / 100) * request.getPropertyValue();
-        double commission = request.getIsPhysicalShipping() ? 11.0 : 0;
-
+        double dailyEffectiveRate = Math.pow((1 + (request.getRate() / 100)), ((double) 1 / 360)) - 1;
+        double monthlyEffectiveRate = Math.pow((1 + dailyEffectiveRate), 30) - 1;
+        double loanAmount = request.getLoanAmount();
+        double monthlyAllRiskInsurance = request.getPropertyValue() * ((request.getAllRiskInsurance() / 100) / 12);
 
         for (short i = 0; i < request.getAmountPayments(); i++) {
-            double periodInterest = (Math.pow(1 + tem, 1) - 1) * request.getLoanAmount();
-            double lienInsurance = request.getLoanAmount() * request.getLienInsurance() / 100;
+            double monthlyInterest = loanAmount * monthlyEffectiveRate;
+            double monthlyLienInsurance = loanAmount * (request.getLienInsurance() / 100);
 
-            double amortization = ((request.getLoanAmount() * tem) / (1 - Math.pow(1 + tem, -(request.getAmountPayments() - i)))) - periodInterest;
-            double fee = amortization + periodInterest + lienInsurance + allRiskInsurance + commission;
+            double monthlyInterestRate = monthlyEffectiveRate + (request.getLienInsurance() / 100);
+            double fee = loanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -(request.getAmountPayments() - i))));
+
+            double amortization = fee - monthlyInterest - monthlyLienInsurance;
+            double monthlyFee = fee + monthlyAllRiskInsurance;
 
             creditResponsesList.add(CreditResponses
                     .builder()
                     .id(i + 1)
-                    .initialBalance(request.getLoanAmount())
+                    .initialBalance(loanAmount)
                     .amortization(amortization)
-                    .interest(periodInterest)
-                    .lien_insurance(lienInsurance)
-                    .allRiskInsurance(allRiskInsurance)
-                    .commission(commission)
-                    .fee(fee)
+                    .interest(monthlyInterest)
+                    .lien_insurance(monthlyLienInsurance)
+                    .allRiskInsurance(monthlyAllRiskInsurance)
+                    .commission(0)
+                    .fee(monthlyFee)
                     .build());
 
-            request.setLoanAmount(request.getLoanAmount() - amortization);
+            loanAmount -= amortization;
 
         }
 
