@@ -72,13 +72,11 @@ public class CreditService implements ICreditService {
 
     @Override
     public List<CreditResponses> getMonthlyPayment(CreditRequest request) {
-
-        // TODO: VALIDAR LA MONEDA DE SOL A DOLARES
-        // TODO: TASA DE INTERES CONVERTIR SI ES NOMINAL
         // TODO: REALIZAR EL PERIODO DE GRACIA
 
         /*
-        * JSON DE PRUEBAS {
+        * JSON DE PRUEBAS
+          {
               "rate": 10.5,
               "amountPayments": 240,
               "propertyValue": 200000,
@@ -89,7 +87,24 @@ public class CreditService implements ICreditService {
               "monthsGracePeriod": 0,
               "isTotal": false,
               "isPartial": false,
-              "interestRateType": "efectiva",
+              "interestRateType": "effective",
+              "currencyName": "sol",
+              "bank": "interbank",
+              "isGoodPayerBonus": true,
+              "isGreenBonus": true
+            }
+            {
+              "rate": 9.98591822094674,
+              "amountPayments": 240,
+              "propertyValue": 200000,
+              "loanAmount": 150000,
+              "lienInsurance": 0.0280,
+              "allRiskInsurance": 0.30,
+              "isPhysicalShipping": false,
+              "monthsGracePeriod": 0,
+              "isTotal": false,
+              "isPartial": false,
+              "interestRateType": "nominal",
               "currencyName": "sol",
               "bank": "interbank",
               "isGoodPayerBonus": true,
@@ -97,6 +112,14 @@ public class CreditService implements ICreditService {
             }
         */
 
+        // Verify if the rate is nominal or effective
+        if (request.getInterestRateType().equalsIgnoreCase("nominal"))
+            request.setRate(convertNominalToEffective(request.getRate()));
+        else if (!request.getInterestRateType().equalsIgnoreCase("effective"))
+            throw new NotFoundException("The interest rate type is not valid");
+
+
+        // Verify if the client has a good payer bonus
         if (request.getIsGoodPayerBonus()) {
             if (request.getPropertyValue() < 93100 && request.getPropertyValue() > 65200)
                 request.setLoanAmount(request.getLoanAmount() - 25700);
@@ -108,20 +131,23 @@ public class CreditService implements ICreditService {
                 request.setLoanAmount(request.getLoanAmount() - 10800);
         }
 
+        // Verify if the client has a green bonus
         if (request.getIsGreenBonus())
             request.setLoanAmount(request.getLoanAmount() - 5400);
 
+        // Do the payment schedule
         if (request.getBank().equalsIgnoreCase("interbank")) {
             return getSchedulePaymentOfInterbank(request);
         } else if (request.getBank().equalsIgnoreCase("bcp")) {
             return getSchedulePaymentOfBCP(request);
         } else {
-            throw new NotFoundException("El banco seleccionado no existe en el sistema");
+            throw new NotFoundException("The system not fount the selected bank");
         }
 
     }
 
     private List<CreditResponses> getSchedulePaymentOfInterbank(CreditRequest request) {
+
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
         double dailyEffectiveRate = Math.pow((1 + (request.getRate() / 100)), ((double) 1 / 360)) - 1;
@@ -129,30 +155,86 @@ public class CreditService implements ICreditService {
         double loanAmount = request.getLoanAmount();
         double monthlyAllRiskInsurance = request.getPropertyValue() * ((request.getAllRiskInsurance() / 100) / 12);
         double monthlyPhysicalShipping = request.getIsPhysicalShipping() ? 11.00 : 0.00;
+        double monthlyInterestRate = monthlyEffectiveRate + (request.getLienInsurance() / 100);
+
 
         for (short i = 0; i < request.getAmountPayments(); i++) {
             double monthlyInterest = loanAmount * monthlyEffectiveRate;
             double monthlyLienInsurance = loanAmount * (request.getLienInsurance() / 100);
 
-            double monthlyInterestRate = monthlyEffectiveRate + (request.getLienInsurance() / 100);
             double fee = loanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -(request.getAmountPayments() - i))));
 
             double amortization = fee - monthlyInterest - monthlyLienInsurance;
             double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping;
 
-            creditResponsesList.add(CreditResponses
-                    .builder()
-                    .id(i + 1)
-                    .initialBalance(roundTwoDecimals(loanAmount))
-                    .amortization(roundTwoDecimals(amortization))
-                    .interest(roundTwoDecimals(monthlyInterest))
-                    .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
-                    .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
-                    .commission(roundTwoDecimals(monthlyPhysicalShipping))
-                    .fee(roundTwoDecimals(monthlyFee))
-                    .build());
+            //Verify if the client has a total or partial grace period
+            if (request.getIsTotal()) {
+                if (request.getMonthlyGracePeriod() == null)
+                    throw new NotFoundException("The monthly grace period cannot be empty");
 
-            loanAmount -= amortization;
+                double interestTotalGracePeriod = 0.00;
+
+                for (short j = 0; j < request.getMonthlyGracePeriod(); j++) {
+                    interestTotalGracePeriod = monthlyEffectiveRate * loanAmount;
+
+                    creditResponsesList.add(CreditResponses
+                            .builder()
+                            .id(j + 1)
+                            .initialBalance(roundTwoDecimals(loanAmount))
+                            .amortization(0.00)
+                            .interest(interestTotalGracePeriod)
+                            .lien_insurance(0.00)
+                            .allRiskInsurance(0.00)
+                            .commission(0.00)
+                            .fee(0.00)
+                            .build());
+
+                    loanAmount += interestTotalGracePeriod;
+                }
+
+                i = (short) (request.getMonthlyGracePeriod() - 1);
+
+                request.setIsTotal(false);
+            } else if (request.getIsPartial()) {
+                if (request.getMonthlyGracePeriod() == null)
+                    throw new NotFoundException("The monthly grace period cannot be empty");
+
+                var interestTotalGracePeriod = monthlyInterest + monthlyLienInsurance + monthlyAllRiskInsurance + monthlyPhysicalShipping;
+
+                for (short j = 0; j < request.getMonthlyGracePeriod(); j++) {
+
+                    creditResponsesList.add(CreditResponses
+                            .builder()
+                            .id(j + 1)
+                            .initialBalance(roundTwoDecimals(loanAmount))
+                            .amortization(0.00)
+                            .interest(roundTwoDecimals(monthlyInterest))
+                            .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
+                            .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
+                            .commission(roundTwoDecimals(monthlyPhysicalShipping))
+                            .fee(roundTwoDecimals(interestTotalGracePeriod))
+                            .build());
+
+                }
+
+                i = (short) (request.getMonthlyGracePeriod() - 1);
+
+                request.setIsPartial(false);
+            } else {
+                creditResponsesList.add(CreditResponses
+                        .builder()
+                        .id(i + 1)
+                        .initialBalance(roundTwoDecimals(loanAmount))
+                        .amortization(roundTwoDecimals(amortization))
+                        .interest(roundTwoDecimals(monthlyInterest))
+                        .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
+                        .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
+                        .commission(roundTwoDecimals(monthlyPhysicalShipping))
+                        .fee(roundTwoDecimals(monthlyFee))
+                        .build());
+
+                loanAmount -= amortization;
+            }
 
         }
 
@@ -205,4 +287,9 @@ public class CreditService implements ICreditService {
         DecimalFormat twoDForm = new DecimalFormat("#.##");
         return Double.parseDouble(twoDForm.format(d));
     }
+
+    private double convertNominalToEffective(double nominalRate) {
+        return (Math.pow((1 + ((nominalRate / 100) / 360)), 360) - 1) * 100;
+    }
+
 }
