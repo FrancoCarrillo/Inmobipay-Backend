@@ -15,10 +15,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -30,6 +34,7 @@ public class CreditService implements ICreditService {
     private final GracePeriodRepository gracePeriodRepository;
     private final InterestRateRepository interestRateRepository;
     private final CurrencyRepository currencyRepository;
+    private final Validator validator;
 
     @Override
     public String create(CreateCreditRequest request) {
@@ -72,7 +77,6 @@ public class CreditService implements ICreditService {
 
     @Override
     public List<CreditResponses> getMonthlyPayment(CreditRequest request) {
-        // TODO: REALIZAR EL PERIODO DE GRACIA
 
         /*
         * JSON DE PRUEBAS
@@ -112,6 +116,12 @@ public class CreditService implements ICreditService {
             }
         */
 
+        Set<ConstraintViolation<CreditRequest>> violations = validator.validate(request);
+
+        if (!violations.isEmpty())
+            throw new NotFoundException(violations.stream().map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining(", ")));
+
         // Verify if the rate is nominal or effective
         if (request.getInterestRateType().equalsIgnoreCase("nominal"))
             request.setRate(convertNominalToEffective(request.getRate()));
@@ -130,6 +140,10 @@ public class CreditService implements ICreditService {
             else if (request.getPropertyValue() < 343900 && request.getPropertyValue() > 232200)
                 request.setLoanAmount(request.getLoanAmount() - 10800);
         }
+
+        // Verify if the loan amount is less than the 90% of property value
+        if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() <  (request.getPropertyValue() * 0.075))
+            throw new NotFoundException("The loan amount is greater than the 90% of property value or less than 7.5%");
 
         // Verify if the client has a green bonus
         if (request.getIsGreenBonus())
@@ -171,6 +185,9 @@ public class CreditService implements ICreditService {
             if (request.getIsTotal()) {
                 if (request.getMonthlyGracePeriod() == null)
                     throw new NotFoundException("The monthly grace period cannot be empty");
+
+                if(request.getIsPartial())
+                    throw new NotFoundException("The system doesn't support partial and total grace period at the same time");
 
                 double interestTotalGracePeriod = 0.00;
 
