@@ -3,6 +3,7 @@ package com.coderly.inmobipay.infraestructure.services;
 import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
+import com.coderly.inmobipay.api.model.responses.GetPaymentScheduleResponse;
 import com.coderly.inmobipay.core.entities.*;
 import com.coderly.inmobipay.core.repositories.*;
 import com.coderly.inmobipay.infraestructure.interfaces.ICreditService;
@@ -76,7 +77,9 @@ public class CreditService implements ICreditService {
     }
 
     @Override
-    public List<CreditResponses> getMonthlyPayment(CreditRequest request) {
+    public GetPaymentScheduleResponse getMonthlyPayment(CreditRequest request) {
+
+        // TODO: CALCULAR EL VAN y TIR DE LA OPERACION
 
         /*
         * JSON DE PRUEBAS
@@ -142,7 +145,7 @@ public class CreditService implements ICreditService {
         }
 
         // Verify if the loan amount is less than the 90% of property value
-        if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() <  (request.getPropertyValue() * 0.075))
+        if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() < (request.getPropertyValue() * 0.075))
             throw new NotFoundException("The loan amount is greater than the 90% of property value or less than 7.5%");
 
         // Verify if the client has a green bonus
@@ -160,7 +163,7 @@ public class CreditService implements ICreditService {
 
     }
 
-    private List<CreditResponses> getSchedulePaymentOfInterbank(CreditRequest request) {
+    private GetPaymentScheduleResponse getSchedulePaymentOfInterbank(CreditRequest request) {
 
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
@@ -186,7 +189,7 @@ public class CreditService implements ICreditService {
                 if (request.getMonthlyGracePeriod() == null)
                     throw new NotFoundException("The monthly grace period cannot be empty");
 
-                if(request.getIsPartial())
+                if (request.getIsPartial())
                     throw new NotFoundException("The system doesn't support partial and total grace period at the same time");
 
                 double interestTotalGracePeriod = 0.00;
@@ -255,10 +258,14 @@ public class CreditService implements ICreditService {
 
         }
 
-        return creditResponsesList;
+        return GetPaymentScheduleResponse.builder()
+                .creditResponses(creditResponsesList)
+                .van(0.00)
+                .tir(0.00)
+                .build();
     }
 
-    private List<CreditResponses> getSchedulePaymentOfBCP(CreditRequest request) {
+    private GetPaymentScheduleResponse getSchedulePaymentOfBCP(CreditRequest request) {
 
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
@@ -296,7 +303,11 @@ public class CreditService implements ICreditService {
             request.setLoanAmount(request.getLoanAmount() - amortization);
         }
 
-        return creditResponsesList;
+        return GetPaymentScheduleResponse.builder()
+                .creditResponses(creditResponsesList)
+                .van(0.00)
+                .tir(0.00)
+                .build();
 
     }
 

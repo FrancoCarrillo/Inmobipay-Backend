@@ -3,6 +3,7 @@ package com.coderly.inmobipay.api.controller;
 import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
+import com.coderly.inmobipay.api.model.responses.GetPaymentScheduleResponse;
 import com.coderly.inmobipay.infraestructure.interfaces.ICreditService;
 import com.coderly.inmobipay.utils.models.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,7 +39,7 @@ public class CreditController {
     }
     @Operation(summary = "Get payment schedule", security = {@SecurityRequirement(name = "bearer-key")})
     @GetMapping
-    public ResponseEntity<List<CreditResponses>> getPaymentSchedule(CreditRequest request) {
+    public ResponseEntity<GetPaymentScheduleResponse> getPaymentSchedule(CreditRequest request) {
         return ResponseEntity.ok(creditService.getMonthlyPayment(request));
     }
 }
