@@ -9,16 +9,11 @@ import com.coderly.inmobipay.core.repositories.*;
 import com.coderly.inmobipay.infraestructure.interfaces.ICreditService;
 import com.coderly.inmobipay.utils.exceptions.NotFoundException;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,16 +30,32 @@ public class CreditService implements ICreditService {
     private final GracePeriodRepository gracePeriodRepository;
     private final InterestRateRepository interestRateRepository;
     private final CurrencyRepository currencyRepository;
+    private final BankRepository bankRepository;
     private final Validator validator;
 
     @Override
     public String create(CreateCreditRequest request) {
 
-        // TODO: AGREGAR CAMPOS FALTANTES A LA TABLA DE CREDITOS
+        Set<ConstraintViolation<CreateCreditRequest>> violations = validator.validate(request);
+
+        if (!violations.isEmpty())
+            throw new NotFoundException(violations.stream().map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining(", ")));
+
+        UserEntity user = userRepository.findById(request.getUserId()).orElseThrow(() -> new NotFoundException("User doesn't exist"));
+        InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
+        CurrencyEntity currency = currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
+        BankEntity bank = bankRepository.findByName(request.getBankName()).orElseThrow(() -> new NotFoundException("Bank doesn't exist"));
+
+        boolean isDuplicateName = user.getCredits()
+                .stream()
+                .anyMatch(c -> c.getName().equals(request.getName()));
+
+        if (isDuplicateName)
+            throw new NotFoundException(String.format("Credit with %s already exists", request.getName()));
+
+
         try {
-            UserEntity user = userRepository.findById(request.getUserId()).orElseThrow(() -> new NotFoundException("User doesn't exist"));
-            InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
-            CurrencyEntity currency = currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
 
             GracePeriodEntity savedGracePeriod = GracePeriodEntity.builder()
                     .amountMonths(request.getAmountPayments())
@@ -55,9 +66,13 @@ public class CreditService implements ICreditService {
             GracePeriodEntity gracePeriod = gracePeriodRepository.save(savedGracePeriod);
 
             CreditEntity savedCredit = CreditEntity.builder()
+                    .name(request.getName())
                     .rate(request.getRate())
                     .amountPayments(request.getAmountPayments())
                     .loanAmount(request.getLoanAmount())
+                    .isGoodPayerBonus(request.getIsGoodPayerBonus())
+                    .isGreenBonus(request.getIsGreenBonus())
+                    .propertyValue(request.getPropertyValue())
                     .lienInsurance(request.getLienInsurance())
                     .allRiskInsurance(request.getAllRiskInsurance())
                     .isPhysicalShipping(request.getIsPhysicalShipping())
@@ -65,6 +80,7 @@ public class CreditService implements ICreditService {
                     .gracePeriod(gracePeriod)
                     .interestRate(interestRate)
                     .currency(currency)
+                    .bank(bank)
                     .build();
 
             creditRepository.save(savedCredit);

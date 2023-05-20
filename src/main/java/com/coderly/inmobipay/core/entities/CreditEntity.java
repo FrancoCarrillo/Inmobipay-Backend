@@ -29,6 +29,15 @@ public class CreditEntity {
     @Column(name = "loan_amount")
     private double loanAmount;
 
+    @Column(name = "is_good_payer_bonus")
+    private Boolean isGoodPayerBonus;
+
+    @Column(name = "is_green_bonus")
+    private Boolean isGreenBonus;
+
+    @Column(name = "property_value")
+    private double propertyValue;
+
     @Column(name = "lien_insurance")
     private double lienInsurance;
 
@@ -53,6 +62,10 @@ public class CreditEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "currency_id")
     private CurrencyEntity currency;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_id")
+    private BankEntity bank;
 
 
 }

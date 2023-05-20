@@ -24,14 +24,14 @@ public class CreditController {
     @Operation(summary = "Save in system a credit information", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
     @PostMapping
-    public ResponseEntity<String> saveCreditInformation(@Valid @RequestBody CreateCreditRequest creditRequest) {
+    public ResponseEntity<String> saveCreditInformation(@RequestBody CreateCreditRequest creditRequest) {
         return ResponseEntity.ok(creditService.create(creditRequest));
     }
 
     @Operation(summary = "Get payment schedule of credit information", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
     @GetMapping
-    public ResponseEntity<GetPaymentScheduleResponse> getPaymentSchedule(CreditRequest request) {
+    public ResponseEntity<GetPaymentScheduleResponse> getPaymentSchedule(@RequestBody CreditRequest request) {
         return ResponseEntity.ok(creditService.getMonthlyPayment(request));
     }
 }

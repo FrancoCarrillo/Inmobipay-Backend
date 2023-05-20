@@ -1,5 +1,6 @@
 package com.coderly.inmobipay.utils;
 
+import com.coderly.inmobipay.infraestructure.services.BankService;
 import com.coderly.inmobipay.infraestructure.services.CurrencyService;
 import com.coderly.inmobipay.infraestructure.services.InterestRateService;
 import com.coderly.inmobipay.infraestructure.services.RoleService;
@@ -20,6 +21,7 @@ public class DatabaseSeedingConfig {
     private RoleService roleService;
     private InterestRateService interestRateService;
     private CurrencyService currencyService;
+    private BankService bankService;
 
     @EventListener
     public void onApplicationReady(ApplicationReadyEvent event) {
@@ -28,6 +30,7 @@ public class DatabaseSeedingConfig {
         roleService.seedRol();
         interestRateService.seedInterestRate();
         currencyService.seedCurrency();
+        bankService.seedBank();
         logger.info("Finished Database Seeding Process for {} at {}", name, new Timestamp(System.currentTimeMillis()));
     }
 }
