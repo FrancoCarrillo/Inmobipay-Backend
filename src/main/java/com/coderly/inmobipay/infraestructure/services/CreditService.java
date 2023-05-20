@@ -3,6 +3,7 @@ package com.coderly.inmobipay.infraestructure.services;
 import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
+import com.coderly.inmobipay.api.model.responses.GetPaymentScheduleResponse;
 import com.coderly.inmobipay.core.entities.*;
 import com.coderly.inmobipay.core.repositories.*;
 import com.coderly.inmobipay.infraestructure.interfaces.ICreditService;
@@ -76,7 +77,9 @@ public class CreditService implements ICreditService {
     }
 
     @Override
-    public List<CreditResponses> getMonthlyPayment(CreditRequest request) {
+    public GetPaymentScheduleResponse getMonthlyPayment(CreditRequest request) {
+
+        // TODO: CALCULAR TIR DE LA OPERACION
 
         /*
         * JSON DE PRUEBAS
@@ -88,7 +91,7 @@ public class CreditService implements ICreditService {
               "lienInsurance": 0.0280,
               "allRiskInsurance": 0.30,
               "isPhysicalShipping": false,
-              "monthsGracePeriod": 0,
+              "monthlyGracePeriod": 0,
               "isTotal": false,
               "isPartial": false,
               "interestRateType": "effective",
@@ -105,7 +108,7 @@ public class CreditService implements ICreditService {
               "lienInsurance": 0.0280,
               "allRiskInsurance": 0.30,
               "isPhysicalShipping": false,
-              "monthsGracePeriod": 0,
+              "monthlyGracePeriod": 0,
               "isTotal": false,
               "isPartial": false,
               "interestRateType": "nominal",
@@ -142,7 +145,7 @@ public class CreditService implements ICreditService {
         }
 
         // Verify if the loan amount is less than the 90% of property value
-        if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() <  (request.getPropertyValue() * 0.075))
+        if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() < (request.getPropertyValue() * 0.075))
             throw new NotFoundException("The loan amount is greater than the 90% of property value or less than 7.5%");
 
         // Verify if the client has a green bonus
@@ -160,17 +163,24 @@ public class CreditService implements ICreditService {
 
     }
 
-    private List<CreditResponses> getSchedulePaymentOfInterbank(CreditRequest request) {
+    private GetPaymentScheduleResponse getSchedulePaymentOfInterbank(CreditRequest request) {
 
         List<CreditResponses> creditResponsesList = new ArrayList<>();
+        double annualCok = 20.00 / 100;
+        double monthlyCok = Math.pow((1 + annualCok), ((double) 1 / 12)) - 1;
 
         double dailyEffectiveRate = Math.pow((1 + (request.getRate() / 100)), ((double) 1 / 360)) - 1;
         double monthlyEffectiveRate = Math.pow((1 + dailyEffectiveRate), 30) - 1;
+
         double loanAmount = request.getLoanAmount();
+
         double monthlyAllRiskInsurance = request.getPropertyValue() * ((request.getAllRiskInsurance() / 100) / 12);
         double monthlyPhysicalShipping = request.getIsPhysicalShipping() ? 11.00 : 0.00;
         double monthlyInterestRate = monthlyEffectiveRate + (request.getLienInsurance() / 100);
 
+        double van = 0.00;
+        int vanPosition = 0;
+        van += getActualValueToVanOperation(vanPosition++, monthlyCok, loanAmount);
 
         for (short i = 0; i < request.getAmountPayments(); i++) {
             double monthlyInterest = loanAmount * monthlyEffectiveRate;
@@ -186,12 +196,15 @@ public class CreditService implements ICreditService {
                 if (request.getMonthlyGracePeriod() == null)
                     throw new NotFoundException("The monthly grace period cannot be empty");
 
-                if(request.getIsPartial())
+                if (request.getIsPartial())
                     throw new NotFoundException("The system doesn't support partial and total grace period at the same time");
 
                 double interestTotalGracePeriod = 0.00;
 
                 for (short j = 0; j < request.getMonthlyGracePeriod(); j++) {
+
+                    double monthlyGracePeriodLienInsurance = loanAmount * (request.getLienInsurance() / 100);
+
                     interestTotalGracePeriod = monthlyEffectiveRate * loanAmount;
 
                     creditResponsesList.add(CreditResponses
@@ -199,14 +212,18 @@ public class CreditService implements ICreditService {
                             .id(j + 1)
                             .initialBalance(roundTwoDecimals(loanAmount))
                             .amortization(0.00)
-                            .interest(interestTotalGracePeriod)
-                            .lien_insurance(0.00)
-                            .allRiskInsurance(0.00)
-                            .commission(0.00)
+                            .interest(roundTwoDecimals(interestTotalGracePeriod))
+                            .lien_insurance(roundTwoDecimals(monthlyGracePeriodLienInsurance))
+                            .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
+                            .commission(roundTwoDecimals(monthlyPhysicalShipping))
                             .fee(0.00)
                             .build());
 
+
                     loanAmount += interestTotalGracePeriod;
+
+                    van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyGracePeriodLienInsurance - monthlyAllRiskInsurance - monthlyPhysicalShipping);
+
                 }
 
                 i = (short) (request.getMonthlyGracePeriod() - 1);
@@ -232,6 +249,8 @@ public class CreditService implements ICreditService {
                             .fee(roundTwoDecimals(interestTotalGracePeriod))
                             .build());
 
+                    van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyLienInsurance - monthlyAllRiskInsurance - monthlyPhysicalShipping - interestTotalGracePeriod);
+
                 }
 
                 i = (short) (request.getMonthlyGracePeriod() - 1);
@@ -251,14 +270,22 @@ public class CreditService implements ICreditService {
                         .build());
 
                 loanAmount -= amortization;
+
+                van += getActualValueToVanOperation(vanPosition++, monthlyCok, -fee - monthlyAllRiskInsurance - monthlyPhysicalShipping);
+
             }
 
         }
 
-        return creditResponsesList;
+
+        return GetPaymentScheduleResponse.builder()
+                .creditResponses(creditResponsesList)
+                .van(roundTwoDecimals(van))
+                .tir(0.00)
+                .build();
     }
 
-    private List<CreditResponses> getSchedulePaymentOfBCP(CreditRequest request) {
+    private GetPaymentScheduleResponse getSchedulePaymentOfBCP(CreditRequest request) {
 
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
@@ -296,7 +323,11 @@ public class CreditService implements ICreditService {
             request.setLoanAmount(request.getLoanAmount() - amortization);
         }
 
-        return creditResponsesList;
+        return GetPaymentScheduleResponse.builder()
+                .creditResponses(creditResponsesList)
+                .van(0.00)
+                .tir(0.00)
+                .build();
 
     }
 
@@ -309,4 +340,8 @@ public class CreditService implements ICreditService {
         return (Math.pow((1 + ((nominalRate / 100) / 360)), 360) - 1) * 100;
     }
 
+
+    private double getActualValueToVanOperation(Integer actualPositionOfPeriod, double monthlyCok, double flowValue) {
+        return flowValue / Math.pow((1 + monthlyCok), actualPositionOfPeriod);
+    }
 }
