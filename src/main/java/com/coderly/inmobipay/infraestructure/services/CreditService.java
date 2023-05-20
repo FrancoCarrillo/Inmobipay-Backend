@@ -83,40 +83,23 @@ public class CreditService implements ICreditService {
 
         /*
         * JSON DE PRUEBAS
-          {
-              "rate": 10.5,
-              "amountPayments": 240,
-              "propertyValue": 200000,
-              "loanAmount": 150000,
-              "lienInsurance": 0.0280,
-              "allRiskInsurance": 0.30,
-              "isPhysicalShipping": false,
-              "monthlyGracePeriod": 0,
-              "isTotal": false,
-              "isPartial": false,
-              "interestRateType": "effective",
-              "currencyName": "sol",
-              "bank": "interbank",
-              "isGoodPayerBonus": true,
-              "isGreenBonus": true
-            }
-            {
-              "rate": 9.98591822094674,
-              "amountPayments": 240,
-              "propertyValue": 200000,
-              "loanAmount": 150000,
-              "lienInsurance": 0.0280,
-              "allRiskInsurance": 0.30,
-              "isPhysicalShipping": false,
-              "monthlyGracePeriod": 0,
-              "isTotal": false,
-              "isPartial": false,
-              "interestRateType": "nominal",
-              "currencyName": "sol",
-              "bank": "interbank",
-              "isGoodPayerBonus": true,
-              "isGreenBonus": true
-            }
+        {
+          "rate": 10.5,
+          "amountPayments": 240,
+          "propertyValue": 200000,
+          "loanAmount": 150000,
+          "lienInsurance": 0.0280,
+          "allRiskInsurance": 0.30,
+          "isPhysicalShipping": true,
+          "isTotal": false,
+          "isPartial": false,
+          "monthlyGracePeriod": 6,
+          "interestRateType": "effective",
+          "currencyName": "sol",
+          "bank": "interbank",
+          "isGoodPayerBonus": false,
+          "isGreenBonus": false
+        }
         */
 
         Set<ConstraintViolation<CreditRequest>> violations = validator.validate(request);
