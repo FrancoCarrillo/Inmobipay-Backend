@@ -3,6 +3,7 @@ package com.coderly.inmobipay.infraestructure.services;
 import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
+import com.coderly.inmobipay.api.model.responses.GetCreditInformationResponse;
 import com.coderly.inmobipay.api.model.responses.GetPaymentScheduleResponse;
 import com.coderly.inmobipay.core.entities.*;
 import com.coderly.inmobipay.core.repositories.*;
@@ -90,6 +91,39 @@ public class CreditService implements ICreditService {
 
 
         return "Credit data saved successfully!!";
+    }
+
+    @Override
+    public List<GetCreditInformationResponse> getCreditByUser(Long user_id) {
+
+        if (!userRepository.existsById(user_id))
+            throw new NotFoundException(String.format("User with id %s doesn't exist in the database", user_id));
+
+        List<CreditEntity> creditEntityList = creditRepository.findByUserId(user_id);
+
+        List<GetCreditInformationResponse> creditResponsesList = new ArrayList<>();
+
+        creditEntityList.forEach(creditEntity -> {
+            creditResponsesList.add(GetCreditInformationResponse.builder()
+                    .id(creditEntity.getId())
+                    .name(creditEntity.getName())
+                    .rate(creditEntity.getRate())
+                    .amountPayments(creditEntity.getAmountPayments())
+                    .loanAmount(creditEntity.getLoanAmount())
+                    .isGoodPayerBonus(creditEntity.getIsGoodPayerBonus())
+                    .isGreenBonus(creditEntity.getIsGreenBonus())
+                    .propertyValue(creditEntity.getPropertyValue())
+                    .lienInsurance(creditEntity.getLienInsurance())
+                    .allRiskInsurance(creditEntity.getAllRiskInsurance())
+                    .isPhysicalShipping(creditEntity.getIsPhysicalShipping())
+                    .gracePeriod(creditEntity.getGracePeriod())
+                    .interestRate(creditEntity.getInterestRate())
+                    .currency(creditEntity.getCurrency())
+                    .bank(creditEntity.getBank())
+                    .build());
+        });
+
+        return creditResponsesList;
     }
 
     @Override
@@ -210,7 +244,7 @@ public class CreditService implements ICreditService {
 
                     creditResponsesList.add(CreditResponses
                             .builder()
-                            .id(j + 1)
+                            .id(j + 1L)
                             .initialBalance(roundTwoDecimals(loanAmount))
                             .amortization(0.00)
                             .interest(roundTwoDecimals(interestTotalGracePeriod))
@@ -240,7 +274,7 @@ public class CreditService implements ICreditService {
 
                     creditResponsesList.add(CreditResponses
                             .builder()
-                            .id(j + 1)
+                            .id(j + 1L)
                             .initialBalance(roundTwoDecimals(loanAmount))
                             .amortization(0.00)
                             .interest(roundTwoDecimals(monthlyInterest))
@@ -260,7 +294,7 @@ public class CreditService implements ICreditService {
             } else {
                 creditResponsesList.add(CreditResponses
                         .builder()
-                        .id(i + 1)
+                        .id(i + 1L)
                         .initialBalance(roundTwoDecimals(loanAmount))
                         .amortization(roundTwoDecimals(amortization))
                         .interest(roundTwoDecimals(monthlyInterest))
@@ -309,7 +343,7 @@ public class CreditService implements ICreditService {
             float fee = (float) (monthlyInterest + monthlyLienInsurance + allRiskValue + 3.5 + amortization);
 
             CreditResponses response = CreditResponses.builder()
-                    .id(j + 1)
+                    .id(j + 1L)
                     .initialBalance(request.getLoanAmount())
                     .amortization(amortization)
                     .interest(monthlyInterest)
