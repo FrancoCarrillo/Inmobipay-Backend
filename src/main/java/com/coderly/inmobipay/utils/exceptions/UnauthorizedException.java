@@ -27,7 +27,7 @@ public class UnauthorizedException implements AuthenticationEntryPoint, Serializ
         Map<String, Object> data = new HashMap<>();
         data.put("timestamp", LocalDateTime.now().toString());
         data.put("status",HttpStatus.UNAUTHORIZED.value());
-        data.put("message", "Bad Credentials: The username or password isn't correct");
+        data.put("message", "Bad Credentials: You are not authorized to access this resource");
         data.put("path", request.getRequestURL().toString());
 
         OutputStream out = response.getOutputStream();
