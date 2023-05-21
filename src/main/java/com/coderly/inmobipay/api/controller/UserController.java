@@ -6,6 +6,7 @@ import com.coderly.inmobipay.api.model.responses.LogInResponse;
 import com.coderly.inmobipay.infraestructure.interfaces.ISecurityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/user")
 @AllArgsConstructor
+@Tag(name = "User")
 public class UserController {
 
     @Operation(summary = "Login in system")

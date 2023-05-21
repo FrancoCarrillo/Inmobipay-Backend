@@ -49,4 +49,11 @@ public class CreditController {
         return ResponseEntity.ok(creditService.getCreditByUser(userId));
     }
 
+    @Operation(summary = "Delete credit information", security = {@SecurityRequirement(name = "bearer-key")})
+    @PreAuthorize("hasRole('USER')")
+    @DeleteMapping("/{creditId}")
+    public ResponseEntity<String> deleteCreditById(@PathVariable Long creditId) {
+        return ResponseEntity.ok(creditService.deleteCreditById(creditId));
+    }
+
 }
