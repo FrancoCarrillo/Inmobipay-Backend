@@ -2,14 +2,16 @@ package com.coderly.inmobipay.infraestructure.services;
 
 import com.coderly.inmobipay.core.entities.CurrencyEntity;
 import com.coderly.inmobipay.core.repositories.CurrencyRepository;
+import com.coderly.inmobipay.infraestructure.interfaces.ICurrencyService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class CurrencyService {
+public class CurrencyService implements ICurrencyService {
     private CurrencyRepository currencyRepository;
 
     private static final CurrencyEntity[] DEFAULT_NAME = {
@@ -24,5 +26,10 @@ public class CurrencyService {
             }
         });
 
+    }
+
+    @Override
+    public List<CurrencyEntity> getAllCurrencies() {
+        return currencyRepository.findAll();
     }
 }

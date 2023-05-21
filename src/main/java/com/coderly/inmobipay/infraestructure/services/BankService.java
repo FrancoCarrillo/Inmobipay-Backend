@@ -3,14 +3,16 @@ package com.coderly.inmobipay.infraestructure.services;
 import com.coderly.inmobipay.core.entities.BankEntity;
 import com.coderly.inmobipay.core.entities.CurrencyEntity;
 import com.coderly.inmobipay.core.repositories.BankRepository;
+import com.coderly.inmobipay.infraestructure.interfaces.IBankService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class BankService {
+public class BankService implements IBankService {
 
     private final BankRepository bankRepository;
 
@@ -26,5 +28,10 @@ public class BankService {
             }
         });
 
+    }
+
+    @Override
+    public List<BankEntity> getAllBanks() {
+        return bankRepository.findAll();
     }
 }
