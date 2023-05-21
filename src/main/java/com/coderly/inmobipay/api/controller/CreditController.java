@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 @Tag(name = "Credit")
 public class CreditController {
+
+    //TODO: Get all payment schedule by user
+    //TODO: Get all entities services
+
     private final ICreditService creditService;
 
     @Operation(summary = "Save in system a credit information", security = {@SecurityRequirement(name = "bearer-key")})
