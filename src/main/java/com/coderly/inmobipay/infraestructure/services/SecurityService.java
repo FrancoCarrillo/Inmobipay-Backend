@@ -1,5 +1,6 @@
 package com.coderly.inmobipay.infraestructure.services;
 
+import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.LoginRequest;
 import com.coderly.inmobipay.api.model.requests.RegisterUserRequest;
 import com.coderly.inmobipay.api.model.responses.LogInResponse;
@@ -19,8 +20,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.Validator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -32,6 +37,7 @@ public class SecurityService implements ISecurityService {
     private final RolRepository rolRepository;
     private final PasswordEncoder encoder;
     private final JwtTokenUtil jwtTokenUtil;
+    private final Validator validator;
 
     @Override
     public LogInResponse login(LoginRequest loginRequest) {
@@ -45,6 +51,13 @@ public class SecurityService implements ISecurityService {
 
     @Override
     public String register(RegisterUserRequest registerUserRequest) {
+
+        Set<ConstraintViolation<RegisterUserRequest>> violations = validator.validate(registerUserRequest);
+
+        if (!violations.isEmpty())
+            throw new NotFoundException(violations.stream().map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining(", ")));
+
         if (userRepository.existsByUsername(registerUserRequest.getUsername())) {
             throw new NotFoundException("Username already in use");
         }

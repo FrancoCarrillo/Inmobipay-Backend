@@ -5,9 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,10 +21,14 @@ public class CreateCreditRequest {
     private double rate;
 
     @NotNull
+    @Min(value = 60, message = "The minimum amount payments is 60 months")
+    @Max(value = 300, message = "The maximum minimum amount payments is 300 months")
     private Integer amountPayments;
 
     @NotNull
     @DecimalMin(value = "0.001", inclusive = false, message = "Invalid property value value")
+    @Min(value = 65200, message = "The property value must be greater than 65200")
+    @Max(value = 464200, message = "The property value must be less than 464200")
     private double propertyValue;
 
     @NotNull
@@ -50,6 +52,8 @@ public class CreateCreditRequest {
     @NotNull
     private Boolean isPartial;
 
+    @Min(value = 1, message = "The minimum monthly grace period is 1 month")
+    @Max(value = 6, message = "The maximum monthly grace period is 6 months")
     private Integer monthlyGracePeriod;
 
     @NotNull

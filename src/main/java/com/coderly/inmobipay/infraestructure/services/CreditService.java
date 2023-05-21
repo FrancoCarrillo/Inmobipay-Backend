@@ -124,11 +124,13 @@ public class CreditService implements ICreditService {
             throw new NotFoundException(violations.stream().map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining(", ")));
 
+        InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
+        currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
+        BankEntity bank = bankRepository.findByName(request.getBank()).orElseThrow(() -> new NotFoundException("The system not fount the selected bank"));
+
         // Verify if the rate is nominal or effective
-        if (request.getInterestRateType().equalsIgnoreCase("nominal"))
+        if (interestRate.getType().equalsIgnoreCase("nominal"))
             request.setRate(convertNominalToEffective(request.getRate()));
-        else if (!request.getInterestRateType().equalsIgnoreCase("effective"))
-            throw new NotFoundException("The interest rate type is not valid");
 
 
         // Verify if the client has a good payer bonus
@@ -152,9 +154,9 @@ public class CreditService implements ICreditService {
             request.setLoanAmount(request.getLoanAmount() - 5400);
 
         // Do the payment schedule
-        if (request.getBank().equalsIgnoreCase("interbank")) {
+        if (bank.getName().equalsIgnoreCase("interbank")) {
             return getSchedulePaymentOfInterbank(request);
-        } else if (request.getBank().equalsIgnoreCase("bcp")) {
+        } else if (bank.getName().equalsIgnoreCase("bcp")) {
             return getSchedulePaymentOfBCP(request);
         } else {
             throw new NotFoundException("The system not fount the selected bank");

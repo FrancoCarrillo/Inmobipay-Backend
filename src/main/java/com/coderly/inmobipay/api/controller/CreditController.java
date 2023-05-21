@@ -12,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-
 @RestController
 @RequestMapping(path = "credit")
 @AllArgsConstructor
@@ -23,14 +21,14 @@ public class CreditController {
 
     @Operation(summary = "Save in system a credit information", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
-    @PostMapping
+    @PostMapping("/save")
     public ResponseEntity<String> saveCreditInformation(@RequestBody CreateCreditRequest creditRequest) {
         return ResponseEntity.ok(creditService.create(creditRequest));
     }
 
     @Operation(summary = "Get payment schedule of credit information", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
-    @GetMapping
+    @PostMapping("/schedule")
     public ResponseEntity<GetPaymentScheduleResponse> getPaymentSchedule(@RequestBody CreditRequest request) {
         return ResponseEntity.ok(creditService.getMonthlyPayment(request));
     }
