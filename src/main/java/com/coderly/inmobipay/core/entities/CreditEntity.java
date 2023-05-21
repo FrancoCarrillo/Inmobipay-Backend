@@ -47,24 +47,24 @@ public class CreditEntity {
     @Column(name = "is_physical_shipping")
     private Boolean isPhysicalShipping;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "grace_period_id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "grace_period_id", nullable = false)
     private GracePeriodEntity gracePeriod;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "interest_rate_id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "interest_rate_id", nullable = false)
     private InterestRateEntity interestRate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "currency_id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "currency_id", nullable = false)
     private CurrencyEntity currency;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bank_id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "bank_id", nullable = false)
     private BankEntity bank;
 
 

@@ -29,4 +29,8 @@ public class UserController {
     public ResponseEntity<String> register(@RequestBody RegisterUserRequest signUpRequest) {
         return ResponseEntity.ok(securityService.register(signUpRequest));
     }
+
+    public ResponseEntity<String> rols(@RequestBody RegisterUserRequest signUpRequest) {
+        return ResponseEntity.ok(securityService.register(signUpRequest));
+    }
 }

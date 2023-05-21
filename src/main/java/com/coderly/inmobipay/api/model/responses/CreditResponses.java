@@ -5,16 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.UUID;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
 public class CreditResponses {
-    private Integer id;
+    private Long id;
     private double initialBalance;
     private double amortization;
     private double interest;
