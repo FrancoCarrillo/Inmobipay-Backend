@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -89,6 +90,17 @@ public class SecurityService implements ISecurityService {
         roles.add(rol);
 
         user.setRoles(roles);
+
+        if (Objects.equals(registerUserRequest.getUsername(), "admin")) {
+
+            RoleEntity adminRol = rolRepository.findByName("USER");
+
+            if (adminRol == null) {
+                throw new NotFoundException("Rol doesn't exist");
+            }
+
+            roles.add(adminRol);
+        }
 
         userRepository.save(user);
 
