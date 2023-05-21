@@ -25,6 +25,10 @@ public class UserEntity {
     private String dni;
     private String password;
 
+    @OneToMany(mappedBy = "user")
+    private List<CreditEntity> credits;
+
+
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "user_rol",
             joinColumns = @JoinColumn(name = "user_id"),

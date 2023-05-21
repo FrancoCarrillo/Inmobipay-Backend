@@ -9,16 +9,11 @@ import com.coderly.inmobipay.core.repositories.*;
 import com.coderly.inmobipay.infraestructure.interfaces.ICreditService;
 import com.coderly.inmobipay.utils.exceptions.NotFoundException;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,16 +30,32 @@ public class CreditService implements ICreditService {
     private final GracePeriodRepository gracePeriodRepository;
     private final InterestRateRepository interestRateRepository;
     private final CurrencyRepository currencyRepository;
+    private final BankRepository bankRepository;
     private final Validator validator;
 
     @Override
     public String create(CreateCreditRequest request) {
 
-        // TODO: AGREGAR CAMPOS FALTANTES A LA TABLA DE CREDITOS
+        Set<ConstraintViolation<CreateCreditRequest>> violations = validator.validate(request);
+
+        if (!violations.isEmpty())
+            throw new NotFoundException(violations.stream().map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining(", ")));
+
+        UserEntity user = userRepository.findById(request.getUserId()).orElseThrow(() -> new NotFoundException("User doesn't exist"));
+        InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
+        CurrencyEntity currency = currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
+        BankEntity bank = bankRepository.findByName(request.getBankName()).orElseThrow(() -> new NotFoundException("Bank doesn't exist"));
+
+        boolean isDuplicateName = user.getCredits()
+                .stream()
+                .anyMatch(c -> c.getName().equals(request.getName()));
+
+        if (isDuplicateName)
+            throw new NotFoundException(String.format("Credit with %s already exists", request.getName()));
+
+
         try {
-            UserEntity user = userRepository.findById(request.getUserId()).orElseThrow(() -> new NotFoundException("User doesn't exist"));
-            InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
-            CurrencyEntity currency = currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
 
             GracePeriodEntity savedGracePeriod = GracePeriodEntity.builder()
                     .amountMonths(request.getAmountPayments())
@@ -55,9 +66,13 @@ public class CreditService implements ICreditService {
             GracePeriodEntity gracePeriod = gracePeriodRepository.save(savedGracePeriod);
 
             CreditEntity savedCredit = CreditEntity.builder()
+                    .name(request.getName())
                     .rate(request.getRate())
                     .amountPayments(request.getAmountPayments())
                     .loanAmount(request.getLoanAmount())
+                    .isGoodPayerBonus(request.getIsGoodPayerBonus())
+                    .isGreenBonus(request.getIsGreenBonus())
+                    .propertyValue(request.getPropertyValue())
                     .lienInsurance(request.getLienInsurance())
                     .allRiskInsurance(request.getAllRiskInsurance())
                     .isPhysicalShipping(request.getIsPhysicalShipping())
@@ -65,6 +80,7 @@ public class CreditService implements ICreditService {
                     .gracePeriod(gracePeriod)
                     .interestRate(interestRate)
                     .currency(currency)
+                    .bank(bank)
                     .build();
 
             creditRepository.save(savedCredit);
@@ -83,40 +99,23 @@ public class CreditService implements ICreditService {
 
         /*
         * JSON DE PRUEBAS
-          {
-              "rate": 10.5,
-              "amountPayments": 240,
-              "propertyValue": 200000,
-              "loanAmount": 150000,
-              "lienInsurance": 0.0280,
-              "allRiskInsurance": 0.30,
-              "isPhysicalShipping": false,
-              "monthlyGracePeriod": 0,
-              "isTotal": false,
-              "isPartial": false,
-              "interestRateType": "effective",
-              "currencyName": "sol",
-              "bank": "interbank",
-              "isGoodPayerBonus": true,
-              "isGreenBonus": true
-            }
-            {
-              "rate": 9.98591822094674,
-              "amountPayments": 240,
-              "propertyValue": 200000,
-              "loanAmount": 150000,
-              "lienInsurance": 0.0280,
-              "allRiskInsurance": 0.30,
-              "isPhysicalShipping": false,
-              "monthlyGracePeriod": 0,
-              "isTotal": false,
-              "isPartial": false,
-              "interestRateType": "nominal",
-              "currencyName": "sol",
-              "bank": "interbank",
-              "isGoodPayerBonus": true,
-              "isGreenBonus": true
-            }
+        {
+          "rate": 10.5,
+          "amountPayments": 240,
+          "propertyValue": 200000,
+          "loanAmount": 150000,
+          "lienInsurance": 0.0280,
+          "allRiskInsurance": 0.30,
+          "isPhysicalShipping": true,
+          "isTotal": false,
+          "isPartial": false,
+          "monthlyGracePeriod": 6,
+          "interestRateType": "effective",
+          "currencyName": "sol",
+          "bank": "interbank",
+          "isGoodPayerBonus": false,
+          "isGreenBonus": false
+        }
         */
 
         Set<ConstraintViolation<CreditRequest>> violations = validator.validate(request);
@@ -125,11 +124,13 @@ public class CreditService implements ICreditService {
             throw new NotFoundException(violations.stream().map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining(", ")));
 
+        InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
+        currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
+        BankEntity bank = bankRepository.findByName(request.getBank()).orElseThrow(() -> new NotFoundException("The system not fount the selected bank"));
+
         // Verify if the rate is nominal or effective
-        if (request.getInterestRateType().equalsIgnoreCase("nominal"))
+        if (interestRate.getType().equalsIgnoreCase("nominal"))
             request.setRate(convertNominalToEffective(request.getRate()));
-        else if (!request.getInterestRateType().equalsIgnoreCase("effective"))
-            throw new NotFoundException("The interest rate type is not valid");
 
 
         // Verify if the client has a good payer bonus
@@ -153,9 +154,9 @@ public class CreditService implements ICreditService {
             request.setLoanAmount(request.getLoanAmount() - 5400);
 
         // Do the payment schedule
-        if (request.getBank().equalsIgnoreCase("interbank")) {
+        if (bank.getName().equalsIgnoreCase("interbank")) {
             return getSchedulePaymentOfInterbank(request);
-        } else if (request.getBank().equalsIgnoreCase("bcp")) {
+        } else if (bank.getName().equalsIgnoreCase("bcp")) {
             return getSchedulePaymentOfBCP(request);
         } else {
             throw new NotFoundException("The system not fount the selected bank");
