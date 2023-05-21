@@ -13,6 +13,10 @@ import java.util.UUID;
 
 public interface ICreditService {
     GetPaymentScheduleResponse getMonthlyPayment(CreditRequest request);
+
     String create(CreateCreditRequest request);
+
     List<GetCreditInformationResponse> getCreditByUser(Long user_id);
+
+    String deleteCreditById(Long creditId);
 }

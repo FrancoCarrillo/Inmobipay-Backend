@@ -9,4 +9,6 @@ public interface ISecurityService {
     LogInResponse login(LoginRequest loginRequest);
 
     String register(RegisterUserRequest registerUserRequest);
+
+    String addRoleAdmin(Long user_id);
 }

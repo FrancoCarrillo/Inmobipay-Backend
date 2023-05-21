@@ -127,6 +127,21 @@ public class CreditService implements ICreditService {
     }
 
     @Override
+    public String deleteCreditById(Long creditId) {
+        try {
+
+            if (!creditRepository.existsById(creditId))
+                throw new NotFoundException(String.format("Credit with id %s doesn't exist in the database", creditId));
+
+            creditRepository.deleteById(creditId);
+
+            return "Credit deleted successfully!!";
+        } catch (Exception e) {
+            throw new RuntimeException("The operation failed", e);
+        }
+    }
+
+    @Override
     public GetPaymentScheduleResponse getMonthlyPayment(CreditRequest request) {
 
         // TODO: CALCULAR TIR DE LA OPERACION

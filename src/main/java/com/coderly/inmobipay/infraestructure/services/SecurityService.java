@@ -1,6 +1,5 @@
 package com.coderly.inmobipay.infraestructure.services;
 
-import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.LoginRequest;
 import com.coderly.inmobipay.api.model.requests.RegisterUserRequest;
 import com.coderly.inmobipay.api.model.responses.LogInResponse;
@@ -11,6 +10,7 @@ import com.coderly.inmobipay.core.repositories.UserRepository;
 import com.coderly.inmobipay.infraestructure.interfaces.ISecurityService;
 import com.coderly.inmobipay.utils.exceptions.NotFoundException;
 import com.coderly.inmobipay.utils.security.jwt.JwtTokenUtil;
+import com.sun.jdi.InternalException;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,9 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
 import javax.validation.Validator;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -66,6 +66,10 @@ public class SecurityService implements ISecurityService {
             throw new NotFoundException("Email is already in use");
         }
 
+        if (userRepository.existsByDni(registerUserRequest.getDni())) {
+            throw new NotFoundException("DNI is already in use");
+        }
+
         RoleEntity rol = rolRepository.findByName("USER");
 
         if (rol == null) {
@@ -87,8 +91,47 @@ public class SecurityService implements ISecurityService {
 
         user.setRoles(roles);
 
+        if (Objects.equals(registerUserRequest.getUsername(), "admin")) {
+
+            RoleEntity adminRol = rolRepository.findByName("USER");
+
+            if (adminRol == null) {
+                throw new NotFoundException("Rol doesn't exist");
+            }
+
+            roles.add(adminRol);
+        }
+
         userRepository.save(user);
 
         return "User registered successfully!";
+    }
+
+    @Override
+    public String addRoleAdmin(Long user_id) {
+        UserEntity user = userRepository.findById(user_id).orElseThrow(() -> new NotFoundException("User not found"));
+
+        RoleEntity rol = rolRepository.findByName("ADMIN");
+
+        if (rol == null) {
+            throw new NotFoundException("Rol doesn't exist");
+        }
+
+        user.getRoles().forEach(role -> {
+            if (role.getName().equals("ADMIN")) {
+                throw new NotFoundException("User already has admin role");
+            }
+        });
+
+        try {
+            user.getRoles().add(rol);
+            userRepository.save(user);
+
+        } catch (Exception e) {
+            throw new InternalException("Problem adding admin role");
+        }
+
+
+        return "Admin role added successfully!";
     }
 }
