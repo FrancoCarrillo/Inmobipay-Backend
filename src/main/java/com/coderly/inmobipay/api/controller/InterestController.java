@@ -1,7 +1,8 @@
 package com.coderly.inmobipay.api.controller;
 
 import com.coderly.inmobipay.core.entities.BankEntity;
-import com.coderly.inmobipay.infraestructure.interfaces.IBankService;
+import com.coderly.inmobipay.core.entities.InterestRateEntity;
+import com.coderly.inmobipay.infraestructure.interfaces.IInterestRateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,17 +16,17 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "bank")
+@RequestMapping(path = "interest")
 @AllArgsConstructor
-@Tag(name = "Bank")
-public class BankController {
+@Tag(name = "Interest Rate")
+public class InterestController {
 
-    private final IBankService bankService;
+    IInterestRateService rateService;
 
-    @Operation(summary = "Get all banks", security = {@SecurityRequirement(name = "bearer-key")})
+    @Operation(summary = "Get all interests rate", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
     @GetMapping
-    public ResponseEntity<List<BankEntity>> getAll() {
-        return ResponseEntity.ok(bankService.getAllBanks());
+    public ResponseEntity<List<InterestRateEntity>> getAll() {
+        return ResponseEntity.ok(rateService.getAllInterestType());
     }
 }
