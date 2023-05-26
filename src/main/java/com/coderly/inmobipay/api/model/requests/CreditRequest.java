@@ -14,7 +14,7 @@ import javax.validation.constraints.*;
 public class CreditRequest {
 
     @NotNull
-    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid rate value")
+    @DecimalMin(value = "7.2", inclusive = false, message = "Invalid rate value")
     private double rate;
 
     @Min(value = 60, message = "The minimum amount payments is 60 months")

@@ -1,6 +1,5 @@
 package com.coderly.inmobipay.api.controller;
 
-import com.coderly.inmobipay.core.entities.BankEntity;
 import com.coderly.inmobipay.core.entities.InterestRateEntity;
 import com.coderly.inmobipay.infraestructure.interfaces.IInterestRateService;
 import io.swagger.v3.oas.annotations.Operation;

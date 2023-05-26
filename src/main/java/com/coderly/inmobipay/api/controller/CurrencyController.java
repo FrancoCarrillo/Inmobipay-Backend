@@ -1,8 +1,6 @@
 package com.coderly.inmobipay.api.controller;
 
-import com.coderly.inmobipay.core.entities.BankEntity;
 import com.coderly.inmobipay.core.entities.CurrencyEntity;
-import com.coderly.inmobipay.infraestructure.interfaces.IBankService;
 import com.coderly.inmobipay.infraestructure.interfaces.ICurrencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

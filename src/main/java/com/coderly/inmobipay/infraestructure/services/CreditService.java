@@ -31,7 +31,6 @@ public class CreditService implements ICreditService {
     private final GracePeriodRepository gracePeriodRepository;
     private final InterestRateRepository interestRateRepository;
     private final CurrencyRepository currencyRepository;
-    private final BankRepository bankRepository;
     private final Validator validator;
 
     @Override
@@ -46,7 +45,6 @@ public class CreditService implements ICreditService {
         UserEntity user = userRepository.findById(request.getUserId()).orElseThrow(() -> new NotFoundException("User doesn't exist"));
         InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
         CurrencyEntity currency = currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
-        BankEntity bank = bankRepository.findByName(request.getBankName()).orElseThrow(() -> new NotFoundException("Bank doesn't exist"));
 
         boolean isDuplicateName = user.getCredits()
                 .stream()
@@ -58,30 +56,21 @@ public class CreditService implements ICreditService {
 
         try {
 
-            GracePeriodEntity savedGracePeriod = GracePeriodEntity.builder()
-                    .amountMonths(request.getAmountPayments())
-                    .isTotal(request.getIsTotal())
-                    .isPartial(request.getIsPartial())
-                    .build();
-
-            GracePeriodEntity gracePeriod = gracePeriodRepository.save(savedGracePeriod);
-
             CreditEntity savedCredit = CreditEntity.builder()
                     .name(request.getName())
                     .rate(request.getRate())
                     .amountPayments(request.getAmountPayments())
-                    .loanAmount(request.getLoanAmount())
-                    .isGoodPayerBonus(request.getIsGoodPayerBonus())
-                    .isGreenBonus(request.getIsGreenBonus())
                     .propertyValue(request.getPropertyValue())
+                    .loanAmount(request.getLoanAmount())
                     .lienInsurance(request.getLienInsurance())
                     .allRiskInsurance(request.getAllRiskInsurance())
                     .isPhysicalShipping(request.getIsPhysicalShipping())
-                    .user(user)
-                    .gracePeriod(gracePeriod)
                     .interestRate(interestRate)
+                    .isGoodPayerBonus(request.getIsGoodPayerBonus())
+                    .isGreenBonus(request.getIsGreenBonus())
+                    .cokRate(request.getCokRate())
                     .currency(currency)
-                    .bank(bank)
+                    .user(user)
                     .build();
 
             creditRepository.save(savedCredit);
@@ -109,17 +98,16 @@ public class CreditService implements ICreditService {
                     .name(creditEntity.getName())
                     .rate(creditEntity.getRate())
                     .amountPayments(creditEntity.getAmountPayments())
-                    .loanAmount(creditEntity.getLoanAmount())
-                    .isGoodPayerBonus(creditEntity.getIsGoodPayerBonus())
-                    .isGreenBonus(creditEntity.getIsGreenBonus())
                     .propertyValue(creditEntity.getPropertyValue())
+                    .loanAmount(creditEntity.getLoanAmount())
                     .lienInsurance(creditEntity.getLienInsurance())
                     .allRiskInsurance(creditEntity.getAllRiskInsurance())
                     .isPhysicalShipping(creditEntity.getIsPhysicalShipping())
-                    .gracePeriod(creditEntity.getGracePeriod())
                     .interestRate(creditEntity.getInterestRate())
+                    .isGoodPayerBonus(creditEntity.getIsGoodPayerBonus())
+                    .isGreenBonus(creditEntity.getIsGreenBonus())
+                    .cokRate(creditEntity.getCokRate())
                     .currency(creditEntity.getCurrency())
-                    .bank(creditEntity.getBank())
                     .build());
         });
 
@@ -153,17 +141,13 @@ public class CreditService implements ICreditService {
           "amountPayments": 240,
           "propertyValue": 200000,
           "loanAmount": 150000,
-          "lienInsurance": 0.0280,
-          "allRiskInsurance": 0.30,
+          "lienInsurance": 0.028,
+          "allRiskInsurance": 0.3,
           "isPhysicalShipping": true,
-          "isTotal": false,
-          "isPartial": false,
-          "monthlyGracePeriod": 6,
-          "interestRateType": "effective",
-          "currencyName": "sol",
-          "bank": "interbank",
+          "interestRateType": "efectiva",
           "isGoodPayerBonus": false,
-          "isGreenBonus": false
+          "isGreenBonus": false,
+          "cokRate": 20
         }
         */
 
@@ -237,9 +221,9 @@ public class CreditService implements ICreditService {
                 creditResponsesList.add(CreditResponses
                         .builder()
                         .id(i + 1L)
-                        .tea(roundTwoDecimals(request.getRate()))
-                        .tem(roundTwoDecimals(monthlyEffectiveRate))
-                        .gracePeriod("Sin Plazo de gracia")
+                        .tea(roundSevenDecimals(request.getRate()))
+                        .tem(roundSevenDecimals(monthlyEffectiveRate * 100))
+                        .gracePeriod("Sin Plazo de Gracia")
                         .initialBalance(roundTwoDecimals(loanAmount))
                         .amortization(roundTwoDecimals(amortization))
                         .interest(roundTwoDecimals(monthlyInterest))
@@ -268,6 +252,11 @@ public class CreditService implements ICreditService {
     private double roundTwoDecimals(double d) {
         DecimalFormat twoDForm = new DecimalFormat("#.##");
         return Double.parseDouble(twoDForm.format(d));
+    }
+
+    private double roundSevenDecimals(double d) {
+        DecimalFormat sevenDForm = new DecimalFormat("#.#######");
+        return Double.parseDouble(sevenDForm.format(d));
     }
 
     private double convertNominalToEffective(double nominalRate) {

@@ -15,7 +15,7 @@ public class InterestRateService implements IInterestRateService {
 
     private final InterestRateRepository interestRateRepository;
 
-    private static final String[] DEFAULT_INTEREST = {"Effective", "Nominal"};
+    private static final String[] DEFAULT_INTEREST = {"Efectiva", "Nominal"};
 
     public void seedInterestRate() {
         Arrays.stream(DEFAULT_INTEREST).forEach(type -> {
