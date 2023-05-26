@@ -93,7 +93,7 @@ public class SecurityService implements ISecurityService {
 
         if (Objects.equals(registerUserRequest.getUsername(), "admin")) {
 
-            RoleEntity adminRol = rolRepository.findByName("USER");
+            RoleEntity adminRol = rolRepository.findByName("ADMIN");
 
             if (adminRol == null) {
                 throw new NotFoundException("Rol doesn't exist");

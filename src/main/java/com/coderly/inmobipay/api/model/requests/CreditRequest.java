@@ -43,30 +43,16 @@ public class CreditRequest {
     private Boolean isPhysicalShipping;
 
     @NotNull
-    private Boolean isTotal;
-
-    @NotNull
-    private Boolean isPartial;
-
-    @Min(value = 1, message = "The minimum monthly grace period is 1 month")
-    @Max(value = 6, message = "The maximum monthly grace period is 6 months")
-    private Integer monthlyGracePeriod;
-
-    @NotNull
     @NotEmpty
     private String interestRateType;
-
-    @NotNull
-    @NotEmpty
-    private String currencyName;
-
-    @NotNull
-    @NotEmpty
-    private String bank;
 
     @NotNull
     private Boolean isGoodPayerBonus;
 
     @NotNull
     private Boolean isGreenBonus;
+
+    @NotNull
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid COK value")
+    private double cokRate;
 }

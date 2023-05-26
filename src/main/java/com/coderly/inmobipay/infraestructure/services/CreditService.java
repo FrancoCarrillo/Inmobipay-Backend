@@ -174,8 +174,6 @@ public class CreditService implements ICreditService {
                     .collect(Collectors.joining(", ")));
 
         InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
-        currencyRepository.findByName(request.getCurrencyName()).orElseThrow(() -> new NotFoundException("Currency doesn't exist"));
-        BankEntity bank = bankRepository.findByName(request.getBank()).orElseThrow(() -> new NotFoundException("The system not fount the selected bank"));
 
         // Verify if the rate is nominal or effective
         if (interestRate.getType().equalsIgnoreCase("nominal"))
@@ -203,20 +201,15 @@ public class CreditService implements ICreditService {
             request.setLoanAmount(request.getLoanAmount() - 5400);
 
         // Do the payment schedule
-        if (bank.getName().equalsIgnoreCase("interbank")) {
-            return getSchedulePaymentOfInterbank(request);
-        } else if (bank.getName().equalsIgnoreCase("bcp")) {
-            return getSchedulePaymentOfBCP(request);
-        } else {
-            throw new NotFoundException("The system not fount the selected bank");
-        }
+        return getSchedulePaymentOfInterbank(request);
+
 
     }
 
     private GetPaymentScheduleResponse getSchedulePaymentOfInterbank(CreditRequest request) {
 
         List<CreditResponses> creditResponsesList = new ArrayList<>();
-        double annualCok = 20.00 / 100;
+        double annualCok = request.getCokRate() / 100;
         double monthlyCok = Math.pow((1 + annualCok), ((double) 1 / 12)) - 1;
 
         double dailyEffectiveRate = Math.pow((1 + (request.getRate() / 100)), ((double) 1 / 360)) - 1;
@@ -240,76 +233,13 @@ public class CreditService implements ICreditService {
 
             double amortization = fee - monthlyInterest - monthlyLienInsurance;
             double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping;
-
-            //Verify if the client has a total or partial grace period
-            if (request.getIsTotal()) {
-                if (request.getMonthlyGracePeriod() == null)
-                    throw new NotFoundException("The monthly grace period cannot be empty");
-
-                if (request.getIsPartial())
-                    throw new NotFoundException("The system doesn't support partial and total grace period at the same time");
-
-                double interestTotalGracePeriod = 0.00;
-
-                for (short j = 0; j < request.getMonthlyGracePeriod(); j++) {
-
-                    double monthlyGracePeriodLienInsurance = loanAmount * (request.getLienInsurance() / 100);
-
-                    interestTotalGracePeriod = monthlyEffectiveRate * loanAmount;
-
-                    creditResponsesList.add(CreditResponses
-                            .builder()
-                            .id(j + 1L)
-                            .initialBalance(roundTwoDecimals(loanAmount))
-                            .amortization(0.00)
-                            .interest(roundTwoDecimals(interestTotalGracePeriod))
-                            .lien_insurance(roundTwoDecimals(monthlyGracePeriodLienInsurance))
-                            .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
-                            .commission(roundTwoDecimals(monthlyPhysicalShipping))
-                            .fee(0.00)
-                            .build());
-
-
-                    loanAmount += interestTotalGracePeriod;
-
-                    van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyGracePeriodLienInsurance - monthlyAllRiskInsurance - monthlyPhysicalShipping);
-
-                }
-
-                i = (short) (request.getMonthlyGracePeriod() - 1);
-
-                request.setIsTotal(false);
-            } else if (request.getIsPartial()) {
-                if (request.getMonthlyGracePeriod() == null)
-                    throw new NotFoundException("The monthly grace period cannot be empty");
-
-                var interestTotalGracePeriod = monthlyInterest + monthlyLienInsurance + monthlyAllRiskInsurance + monthlyPhysicalShipping;
-
-                for (short j = 0; j < request.getMonthlyGracePeriod(); j++) {
-
-                    creditResponsesList.add(CreditResponses
-                            .builder()
-                            .id(j + 1L)
-                            .initialBalance(roundTwoDecimals(loanAmount))
-                            .amortization(0.00)
-                            .interest(roundTwoDecimals(monthlyInterest))
-                            .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
-                            .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
-                            .commission(roundTwoDecimals(monthlyPhysicalShipping))
-                            .fee(roundTwoDecimals(interestTotalGracePeriod))
-                            .build());
-
-                    van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyLienInsurance - monthlyAllRiskInsurance - monthlyPhysicalShipping - interestTotalGracePeriod);
-
-                }
-
-                i = (short) (request.getMonthlyGracePeriod() - 1);
-
-                request.setIsPartial(false);
-            } else {
+            {
                 creditResponsesList.add(CreditResponses
                         .builder()
                         .id(i + 1L)
+                        .tea(roundTwoDecimals(request.getRate()))
+                        .tem(roundTwoDecimals(monthlyEffectiveRate))
+                        .gracePeriod("Sin Plazo de gracia")
                         .initialBalance(roundTwoDecimals(loanAmount))
                         .amortization(roundTwoDecimals(amortization))
                         .interest(roundTwoDecimals(monthlyInterest))
@@ -333,52 +263,6 @@ public class CreditService implements ICreditService {
                 .van(roundTwoDecimals(van))
                 .tir(0.00)
                 .build();
-    }
-
-    private GetPaymentScheduleResponse getSchedulePaymentOfBCP(CreditRequest request) {
-
-        List<CreditResponses> creditResponsesList = new ArrayList<>();
-
-        float tna = (float) ((Math.pow((1 + (request.getRate()) / 100), (1 / 12f)) - 1) * 12 * (365 / 360f));
-        float i = (tna / 365) * 30;
-
-        float annualLienInsurance = (float) ((request.getLienInsurance() / 100) * 12);
-        float d = (annualLienInsurance / 365) * 30;
-
-        float monthlyAllRiskInsurance = (float) ((request.getAllRiskInsurance() / 100) * 12);
-        float n = (monthlyAllRiskInsurance / 365) * 30;
-        float allRiskValue = (float) (request.getPropertyValue() * n);
-
-
-        for (short j = 0; j < request.getAmountPayments(); j++) {
-            float monthlyInterest = (float) (request.getLoanAmount() * i);
-            float monthlyLienInsurance = (float) (request.getLoanAmount() * d);
-            float amortization = (float) (request.getLoanAmount() * (i / (1 - Math.pow((1 + i), -(request.getAmountPayments() - j))))) - monthlyInterest;
-
-            float fee = (float) (monthlyInterest + monthlyLienInsurance + allRiskValue + 3.5 + amortization);
-
-            CreditResponses response = CreditResponses.builder()
-                    .id(j + 1L)
-                    .initialBalance(request.getLoanAmount())
-                    .amortization(amortization)
-                    .interest(monthlyInterest)
-                    .lien_insurance(monthlyLienInsurance)
-                    .allRiskInsurance(allRiskValue)
-                    .commission(3.5)
-                    .fee(fee)
-                    .build();
-
-            creditResponsesList.add(response);
-
-            request.setLoanAmount(request.getLoanAmount() - amortization);
-        }
-
-        return GetPaymentScheduleResponse.builder()
-                .creditResponses(creditResponsesList)
-                .van(0.00)
-                .tir(0.00)
-                .build();
-
     }
 
     private double roundTwoDecimals(double d) {
