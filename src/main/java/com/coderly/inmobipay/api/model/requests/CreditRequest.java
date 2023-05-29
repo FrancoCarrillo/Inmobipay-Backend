@@ -16,7 +16,7 @@ public class CreditRequest {
     @DecimalMin(value = "7.2", inclusive = false, message = "Invalid rate value")
     private double rate;
 
-    @Min(value = 12, message = "The minimum amount payments is 60 months")
+    @Min(value = 60, message = "The minimum amount payments is 60 months")
     @Max(value = 300, message = "The maximum minimum amount payments is 300 months")
     @NotNull
     private Integer amountPayments;
