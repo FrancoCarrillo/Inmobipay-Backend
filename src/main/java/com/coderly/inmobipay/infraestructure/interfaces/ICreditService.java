@@ -2,6 +2,7 @@ package com.coderly.inmobipay.infraestructure.interfaces;
 
 import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
+import com.coderly.inmobipay.api.model.requests.GracePeriodRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
 import com.coderly.inmobipay.api.model.responses.GetCreditInformationResponse;
 import com.coderly.inmobipay.api.model.responses.GetPaymentScheduleResponse;
@@ -13,10 +14,13 @@ import java.util.UUID;
 
 public interface ICreditService {
     GetPaymentScheduleResponse getMonthlyPayment(CreditRequest request);
+    GetPaymentScheduleResponse getMonthlyPaymentGracePeriod(GracePeriodRequest request);
 
     String create(CreateCreditRequest request);
 
     List<GetCreditInformationResponse> getCreditByUser(Long user_id);
 
     String deleteCreditById(Long creditId);
+
+    GetPaymentScheduleResponse getMonthlyPaymentByGracePeriod(GracePeriodRequest request);
 }
