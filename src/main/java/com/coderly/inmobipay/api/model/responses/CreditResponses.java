@@ -11,9 +11,12 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreditResponses {
     private Long id;
+    private double tea;
+    private double tem;
+    private String gracePeriod;
     private double initialBalance;
-    private double amortization;
     private double interest;
+    private double amortization;
     private double lien_insurance;
     private double allRiskInsurance;
     private double commission;

@@ -2,6 +2,7 @@ package com.coderly.inmobipay.api.controller;
 
 import com.coderly.inmobipay.api.model.requests.CreateCreditRequest;
 import com.coderly.inmobipay.api.model.requests.CreditRequest;
+import com.coderly.inmobipay.api.model.requests.GracePeriodRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
 import com.coderly.inmobipay.api.model.responses.GetCreditInformationResponse;
 import com.coderly.inmobipay.api.model.responses.GetPaymentScheduleResponse;
@@ -40,6 +41,13 @@ public class CreditController {
     @PostMapping("/schedule")
     public ResponseEntity<GetPaymentScheduleResponse> getPaymentSchedule(@RequestBody CreditRequest request) {
         return ResponseEntity.ok(creditService.getMonthlyPayment(request));
+    }
+
+    @Operation(summary = "Get payment schedule with period grace of credit information", security = {@SecurityRequirement(name = "bearer-key")})
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/reschedule")
+    public ResponseEntity<GetPaymentScheduleResponse> getPaymentSchedule(@RequestBody GracePeriodRequest request) {
+        return ResponseEntity.ok(creditService.getMonthlyPaymentGracePeriod(request));
     }
 
     @Operation(summary = "Get credit information by user", security = {@SecurityRequirement(name = "bearer-key")})

@@ -15,7 +15,7 @@ public class CurrencyService implements ICurrencyService {
     private CurrencyRepository currencyRepository;
 
     private static final CurrencyEntity[] DEFAULT_NAME = {
-            new CurrencyEntity().withName("Dollar").withExchange_value(3.65),
+            new CurrencyEntity().withName("Dolar").withExchange_value(3.65),
             new CurrencyEntity().withName("Sol").withExchange_value(1D)
     };
 

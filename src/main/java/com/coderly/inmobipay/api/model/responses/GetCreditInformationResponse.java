@@ -1,12 +1,11 @@
 package com.coderly.inmobipay.api.model.responses;
 
-import com.coderly.inmobipay.core.entities.*;
+import com.coderly.inmobipay.core.entities.CurrencyEntity;
+import com.coderly.inmobipay.core.entities.InterestRateEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,16 +17,15 @@ public class GetCreditInformationResponse {
     private String name;
     private double rate;
     private Integer amountPayments;
-    private double loanAmount;
-    private Boolean isGoodPayerBonus;
-    private Boolean isGreenBonus;
     private double propertyValue;
+    private double loanAmount;
     private double lienInsurance;
     private double allRiskInsurance;
     private Boolean isPhysicalShipping;
-    private GracePeriodEntity gracePeriod;
     private InterestRateEntity interestRate;
+    private Boolean isGoodPayerBonus;
+    private Boolean isGreenBonus;
+    private double cokRate;
     private CurrencyEntity currency;
-    private BankEntity bank;
 
 }

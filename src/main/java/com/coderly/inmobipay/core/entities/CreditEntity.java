@@ -1,6 +1,8 @@
 package com.coderly.inmobipay.core.entities;
 
 import javax.persistence.*;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
 
 import lombok.*;
 
@@ -26,17 +28,11 @@ public class CreditEntity {
     @Column(name = "amount_payments")
     private Integer amountPayments;
 
-    @Column(name = "loan_amount")
-    private double loanAmount;
-
-    @Column(name = "is_good_payer_bonus")
-    private Boolean isGoodPayerBonus;
-
-    @Column(name = "is_green_bonus")
-    private Boolean isGreenBonus;
-
     @Column(name = "property_value")
     private double propertyValue;
+
+    @Column(name = "loan_amount")
+    private double loanAmount;
 
     @Column(name = "lien_insurance")
     private double lienInsurance;
@@ -48,25 +44,26 @@ public class CreditEntity {
     private Boolean isPhysicalShipping;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
-
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "grace_period_id", nullable = false)
-    private GracePeriodEntity gracePeriod;
-
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "interest_rate_id", nullable = false)
     private InterestRateEntity interestRate;
+
+    @Column(name = "is_good_payer_bonus")
+    private Boolean isGoodPayerBonus;
+
+    @Column(name = "is_green_bonus")
+    private Boolean isGreenBonus;
+
+    @NotNull
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid COK value")
+    private double cokRate;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "currency_id", nullable = false)
     private CurrencyEntity currency;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "bank_id", nullable = false)
-    private BankEntity bank;
-
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
 }
 
