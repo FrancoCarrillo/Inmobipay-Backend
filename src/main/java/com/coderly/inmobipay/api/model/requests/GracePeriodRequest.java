@@ -16,7 +16,7 @@ public class GracePeriodRequest {
     @NotNull
     private List<GraceAndRatesRequest> graceAndRatesRequests;
 
-    @Min(value = 12, message = "The minimum amount payments is 60 months")
+    @Min(value = 60, message = "The minimum amount payments is 60 months")
     @Max(value = 300, message = "The maximum minimum amount payments is 300 months")
     @NotNull
     private Integer amountPayments;
