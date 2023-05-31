@@ -266,6 +266,9 @@ public class CreditService implements ICreditService {
     public GetPaymentScheduleResponse getMonthlyPaymentByGracePeriod(GracePeriodRequest request){
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
+        if(request.getAmountPayments() != request.getGraceAndRatesRequests().size())
+            throw new NotFoundException("The amount of payments is different to the amount of grace and rates");
+
         //Converter COK annual to monthly
         double monthlyCok = getMonthlyCok(request.getCokRate());
 
@@ -281,9 +284,9 @@ public class CreditService implements ICreditService {
 
         for (short i = 0; i < request.getAmountPayments(); i++) {
 
-            if(request.getGraceAndRatesRequests().get(i).getGraceByMonth().equals("T")){
+            if(request.getGraceAndRatesRequests().get(i).getGracePeriod().equals("T")){
                 //Converter Effective Rate annual to monthly
-                double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getRateByMonth());
+                double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getTea());
 
                 double monthlyInterest = loanAmount * monthlyEffectiveRate;
 
@@ -297,7 +300,7 @@ public class CreditService implements ICreditService {
                 creditResponsesList.add(CreditResponses
                         .builder()
                         .id(i + 1L)
-                        .tea(roundSevenDecimals(request.getGraceAndRatesRequests().get(i).getRateByMonth()))
+                        .tea(roundSevenDecimals(request.getGraceAndRatesRequests().get(i).getTea()))
                         .tem(roundSevenDecimals(monthlyEffectiveRate * 100))
                         .gracePeriod("T")
                         .initialBalance(roundTwoDecimals(loanAmount))
@@ -313,10 +316,10 @@ public class CreditService implements ICreditService {
 
                 van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyFee);
             }
-            else if(request.getGraceAndRatesRequests().get(i).getGraceByMonth().equals("P")){
+            else if(request.getGraceAndRatesRequests().get(i).getGracePeriod().equals("P")){
 
                 //Converter Effective Rate annual to monthly
-                double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getRateByMonth());
+                double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getTea());
 
                 double monthlyInterest = loanAmount * monthlyEffectiveRate;
                 double monthlyLienInsurance = loanAmount * (request.getLienInsurance() / 100);
@@ -329,7 +332,7 @@ public class CreditService implements ICreditService {
                 creditResponsesList.add(CreditResponses
                         .builder()
                         .id(i + 1L)
-                        .tea(roundSevenDecimals(request.getGraceAndRatesRequests().get(i).getRateByMonth()))
+                        .tea(roundSevenDecimals(request.getGraceAndRatesRequests().get(i).getTea()))
                         .tem(roundSevenDecimals(monthlyEffectiveRate * 100))
                         .gracePeriod("P")
                         .initialBalance(roundTwoDecimals(loanAmount))
@@ -345,7 +348,7 @@ public class CreditService implements ICreditService {
             }
             else{
                 //Converter Effective Rate annual to monthly
-                double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getRateByMonth());
+                double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getTea());
                 double monthlyInterestRate = monthlyEffectiveRate + (request.getLienInsurance() / 100);
 
                 double monthlyInterest = loanAmount * monthlyEffectiveRate;
@@ -359,7 +362,7 @@ public class CreditService implements ICreditService {
                 creditResponsesList.add(CreditResponses
                         .builder()
                         .id(i + 1L)
-                        .tea(roundSevenDecimals(request.getGraceAndRatesRequests().get(i).getRateByMonth()))
+                        .tea(roundSevenDecimals(request.getGraceAndRatesRequests().get(i).getTea()))
                         .tem(roundSevenDecimals(monthlyEffectiveRate * 100))
                         .gracePeriod("S")
                         .initialBalance(roundTwoDecimals(loanAmount))

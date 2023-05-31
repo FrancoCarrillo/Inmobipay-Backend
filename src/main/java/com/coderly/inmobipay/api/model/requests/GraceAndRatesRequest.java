@@ -12,8 +12,8 @@ import javax.validation.constraints.NotNull;
 public class GraceAndRatesRequest {
 
     @NotNull
-    private double rateByMonth;
+    private double tea;
 
     @NotNull
-    private String graceByMonth;
+    private String gracePeriod;
 }
