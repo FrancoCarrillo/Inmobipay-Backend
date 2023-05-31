@@ -6,15 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class CreditRequest {
+public class GracePeriodRequest {
 
     @NotNull
-    @DecimalMin(value = "7.2", inclusive = false, message = "Invalid rate value")
-    private double rate;
+    private List<GraceAndRatesRequest> graceAndRatesRequests;
 
     @Min(value = 60, message = "The minimum amount payments is 60 months")
     @Max(value = 300, message = "The maximum minimum amount payments is 300 months")
@@ -40,10 +40,6 @@ public class CreditRequest {
 
     @NotNull
     private Boolean isPhysicalShipping;
-
-    @NotNull
-    @NotEmpty
-    private String interestRateType;
 
     @NotNull
     private Boolean isGoodPayerBonus;
