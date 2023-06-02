@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -20,5 +23,7 @@ public class CreditResponses {
     private double lien_insurance;
     private double allRiskInsurance;
     private double commission;
+    private double administrativeExpenses;
+    private double postage;
     private double fee;
 }
