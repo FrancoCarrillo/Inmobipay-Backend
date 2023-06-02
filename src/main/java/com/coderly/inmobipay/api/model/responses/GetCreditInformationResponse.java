@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -21,7 +23,9 @@ public class GetCreditInformationResponse {
     private double loanAmount;
     private double lienInsurance;
     private double allRiskInsurance;
-    private Boolean isPhysicalShipping;
+    private double administrativeExpenses;
+    private double postage;
+    private double commissions;
     private InterestRateEntity interestRate;
     private Boolean isGoodPayerBonus;
     private Boolean isGreenBonus;
