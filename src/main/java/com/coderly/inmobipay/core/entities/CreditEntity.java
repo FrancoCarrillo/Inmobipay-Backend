@@ -40,8 +40,14 @@ public class CreditEntity {
     @Column(name = "all_risk_insurance")
     private double allRiskInsurance;
 
-    @Column(name = "is_physical_shipping")
-    private Boolean isPhysicalShipping;
+    @Column(name = "administrative_expenses")
+    private double administrativeExpenses;
+
+    @Column(name = "postage")
+    private double postage;
+
+    @Column(name = "commissions")
+    private double commissions;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "interest_rate_id", nullable = false)
@@ -53,8 +59,7 @@ public class CreditEntity {
     @Column(name = "is_green_bonus")
     private Boolean isGreenBonus;
 
-    @NotNull
-    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid COK value")
+    @Column(name = "cok_rate")
     private double cokRate;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)

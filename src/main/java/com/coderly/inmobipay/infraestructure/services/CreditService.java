@@ -65,7 +65,9 @@ public class CreditService implements ICreditService {
                     .loanAmount(request.getLoanAmount())
                     .lienInsurance(request.getLienInsurance())
                     .allRiskInsurance(request.getAllRiskInsurance())
-                    .isPhysicalShipping(request.getIsPhysicalShipping())
+                    .postage(request.getPostage())
+                    .commissions(request.getCommissions())
+                    .administrativeExpenses(request.getAdministrativeExpenses())
                     .interestRate(interestRate)
                     .isGoodPayerBonus(request.getIsGoodPayerBonus())
                     .isGreenBonus(request.getIsGreenBonus())
@@ -103,7 +105,9 @@ public class CreditService implements ICreditService {
                     .loanAmount(creditEntity.getLoanAmount())
                     .lienInsurance(creditEntity.getLienInsurance())
                     .allRiskInsurance(creditEntity.getAllRiskInsurance())
-                    .isPhysicalShipping(creditEntity.getIsPhysicalShipping())
+                    .administrativeExpenses(creditEntity.getAdministrativeExpenses())
+                    .postage(creditEntity.getPostage())
+                    .commissions(creditEntity.getCommissions())
                     .interestRate(creditEntity.getInterestRate())
                     .isGoodPayerBonus(creditEntity.getIsGoodPayerBonus())
                     .isGreenBonus(creditEntity.getIsGreenBonus())
@@ -218,7 +222,6 @@ public class CreditService implements ICreditService {
         double loanAmount = request.getLoanAmount();
 
         double monthlyAllRiskInsurance = request.getPropertyValue() * ((request.getAllRiskInsurance() / 100) / 12);
-        double monthlyPhysicalShipping = request.getIsPhysicalShipping() ? 11.00 : 0.00;
         double monthlyInterestRate = monthlyEffectiveRate + (request.getLienInsurance() / 100);
 
         double van = 0.00;
@@ -232,7 +235,7 @@ public class CreditService implements ICreditService {
             double fee = loanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -(request.getAmountPayments() - i))));
 
             double amortization = fee - monthlyInterest - monthlyLienInsurance;
-            double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping;
+            double monthlyFee = fee + monthlyAllRiskInsurance + request.getCommissions() + request.getPostage() + request.getAdministrativeExpenses();
 
             creditResponsesList.add(CreditResponses
                     .builder()
@@ -245,7 +248,9 @@ public class CreditService implements ICreditService {
                     .interest(roundTwoDecimals(monthlyInterest))
                     .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
                     .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
-                    .commission(roundTwoDecimals(monthlyPhysicalShipping))
+                    .commission(roundTwoDecimals(request.getCommissions()))
+                    .postage(roundTwoDecimals(request.getPostage()))
+                    .administrativeExpenses(request.getAdministrativeExpenses())
                     .fee(roundTwoDecimals(monthlyFee))
                     .build());
 
@@ -263,10 +268,10 @@ public class CreditService implements ICreditService {
                 .build();
     }
 
-    public GetPaymentScheduleResponse getMonthlyPaymentByGracePeriod(GracePeriodRequest request){
+    public GetPaymentScheduleResponse getMonthlyPaymentByGracePeriod(GracePeriodRequest request) {
         List<CreditResponses> creditResponsesList = new ArrayList<>();
 
-        if(request.getAmountPayments() != request.getGraceAndRatesRequests().size())
+        if (request.getAmountPayments() != request.getGraceAndRatesRequests().size())
             throw new NotFoundException("The amount of payments is different to the amount of grace and rates");
 
         //Converter COK annual to monthly
@@ -284,7 +289,7 @@ public class CreditService implements ICreditService {
 
         for (short i = 0; i < request.getAmountPayments(); i++) {
 
-            if(request.getGraceAndRatesRequests().get(i).getGracePeriod().equals("T")){
+            if (request.getGraceAndRatesRequests().get(i).getGracePeriod().equals("T")) {
                 //Converter Effective Rate annual to monthly
                 double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getTea());
 
@@ -295,7 +300,7 @@ public class CreditService implements ICreditService {
                 double fee = 0;
 
                 double amortization = 0;
-                double monthlyFee = fee+monthlyAllRiskInsurance+monthlyPhysicalShipping+monthlyLienInsurance;
+                double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping + monthlyLienInsurance;
 
                 creditResponsesList.add(CreditResponses
                         .builder()
@@ -315,8 +320,7 @@ public class CreditService implements ICreditService {
                 loanAmount += monthlyInterest;
 
                 van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyFee);
-            }
-            else if(request.getGraceAndRatesRequests().get(i).getGracePeriod().equals("P")){
+            } else if (request.getGraceAndRatesRequests().get(i).getGracePeriod().equals("P")) {
 
                 //Converter Effective Rate annual to monthly
                 double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getTea());
@@ -327,7 +331,7 @@ public class CreditService implements ICreditService {
                 double fee = monthlyInterest;
 
                 double amortization = 0;
-                double monthlyFee = fee+monthlyAllRiskInsurance+monthlyPhysicalShipping+monthlyLienInsurance;
+                double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping + monthlyLienInsurance;
 
                 creditResponsesList.add(CreditResponses
                         .builder()
@@ -345,8 +349,7 @@ public class CreditService implements ICreditService {
                         .build());
 
                 van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyFee);
-            }
-            else{
+            } else {
                 //Converter Effective Rate annual to monthly
                 double monthlyEffectiveRate = getMonthlyEffectiveRate(request.getGraceAndRatesRequests().get(i).getTea());
                 double monthlyInterestRate = monthlyEffectiveRate + (request.getLienInsurance() / 100);
@@ -396,7 +399,7 @@ public class CreditService implements ICreditService {
         return Double.parseDouble(sevenDForm.format(d));
     }
 
-    private double setLoanAmountByGoodPayerBonus(boolean isGoodPayerBonus, double propertyValue, double loanAmount){
+    private double setLoanAmountByGoodPayerBonus(boolean isGoodPayerBonus, double propertyValue, double loanAmount) {
         if (isGoodPayerBonus) {
             if (propertyValue < 93100 && propertyValue > 65200)
                 return loanAmount - 25700;
@@ -410,13 +413,13 @@ public class CreditService implements ICreditService {
         return loanAmount;
     }
 
-    private double getMonthlyCok(double cok){
+    private double getMonthlyCok(double cok) {
         double annualCok = cok / 100;
         return Math.pow((1 + annualCok), ((double) 1 / 12)) - 1;
     }
 
-    private double getMonthlyEffectiveRate(double rate){
-        double dailyEffectiveRate = Math.pow((1 + (rate/ 100)), ((double) 1 / 360)) - 1;
+    private double getMonthlyEffectiveRate(double rate) {
+        double dailyEffectiveRate = Math.pow((1 + (rate / 100)), ((double) 1 / 360)) - 1;
         return Math.pow((1 + dailyEffectiveRate), 30) - 1;
     }
 

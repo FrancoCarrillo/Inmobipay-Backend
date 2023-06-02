@@ -39,9 +39,6 @@ public class CreditRequest {
     private double allRiskInsurance;
 
     @NotNull
-    private Boolean isPhysicalShipping;
-
-    @NotNull
     @NotEmpty
     private String interestRateType;
 
@@ -50,6 +47,18 @@ public class CreditRequest {
 
     @NotNull
     private Boolean isGreenBonus;
+
+    @NotNull
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid administrative expenses value")
+    private double administrativeExpenses;
+
+    @NotNull
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid postage value")
+    private double postage;
+
+    @NotNull
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid commissions value")
+    private double commissions;
 
     @NotNull
     @DecimalMin(value = "0.001", inclusive = false, message = "Invalid COK value")
