@@ -39,7 +39,16 @@ public class GracePeriodRequest {
     private double allRiskInsurance;
 
     @NotNull
-    private Boolean isPhysicalShipping;
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid administrative expenses value")
+    private double administrativeExpenses;
+
+    @NotNull
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid postage value")
+    private double postage;
+
+    @NotNull
+    @DecimalMin(value = "0.001", inclusive = false, message = "Invalid commissions value")
+    private double commissions;
 
     @NotNull
     private Boolean isGoodPayerBonus;

@@ -281,7 +281,6 @@ public class CreditService implements ICreditService {
         double loanAmount = request.getLoanAmount();
 
         double monthlyAllRiskInsurance = request.getPropertyValue() * ((request.getAllRiskInsurance() / 100) / 12);
-        double monthlyPhysicalShipping = request.getIsPhysicalShipping() ? 11.00 : 0.00;
 
         double van = 0.00;
         int vanPosition = 0;
@@ -300,7 +299,7 @@ public class CreditService implements ICreditService {
                 double fee = 0;
 
                 double amortization = 0;
-                double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping + monthlyLienInsurance;
+                double monthlyFee = fee + monthlyAllRiskInsurance + request.getCommissions() + request.getAdministrativeExpenses() + request.getPostage() + monthlyLienInsurance;
 
                 creditResponsesList.add(CreditResponses
                         .builder()
@@ -313,7 +312,9 @@ public class CreditService implements ICreditService {
                         .interest(roundTwoDecimals(monthlyInterest))
                         .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
                         .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
-                        .commission(roundTwoDecimals(monthlyPhysicalShipping))
+                        .commission(roundTwoDecimals(request.getCommissions()))
+                        .postage(roundTwoDecimals(request.getPostage()))
+                        .administrativeExpenses(roundTwoDecimals(request.getAdministrativeExpenses()))
                         .fee(roundTwoDecimals(monthlyFee))
                         .build());
 
@@ -331,7 +332,7 @@ public class CreditService implements ICreditService {
                 double fee = monthlyInterest;
 
                 double amortization = 0;
-                double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping + monthlyLienInsurance;
+                double monthlyFee = fee + monthlyAllRiskInsurance + request.getCommissions() + request.getAdministrativeExpenses() + request.getPostage() + monthlyLienInsurance;
 
                 creditResponsesList.add(CreditResponses
                         .builder()
@@ -344,7 +345,9 @@ public class CreditService implements ICreditService {
                         .interest(roundTwoDecimals(monthlyInterest))
                         .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
                         .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
-                        .commission(roundTwoDecimals(monthlyPhysicalShipping))
+                        .commission(roundTwoDecimals(request.getCommissions()))
+                        .postage(roundTwoDecimals(request.getPostage()))
+                        .administrativeExpenses(roundTwoDecimals(request.getAdministrativeExpenses()))
                         .fee(roundTwoDecimals(monthlyFee))
                         .build());
 
@@ -360,7 +363,7 @@ public class CreditService implements ICreditService {
                 double fee = loanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -(request.getAmountPayments() - i))));
 
                 double amortization = fee - monthlyInterest - monthlyLienInsurance;
-                double monthlyFee = fee + monthlyAllRiskInsurance + monthlyPhysicalShipping;
+                double monthlyFee = fee + monthlyAllRiskInsurance + request.getCommissions() + request.getAdministrativeExpenses() + request.getPostage();
 
                 creditResponsesList.add(CreditResponses
                         .builder()
@@ -373,7 +376,9 @@ public class CreditService implements ICreditService {
                         .interest(roundTwoDecimals(monthlyInterest))
                         .lien_insurance(roundTwoDecimals(monthlyLienInsurance))
                         .allRiskInsurance(roundTwoDecimals(monthlyAllRiskInsurance))
-                        .commission(roundTwoDecimals(monthlyPhysicalShipping))
+                        .commission(roundTwoDecimals(request.getCommissions()))
+                        .postage(roundTwoDecimals(request.getPostage()))
+                        .administrativeExpenses(roundTwoDecimals(request.getAdministrativeExpenses()))
                         .fee(roundTwoDecimals(monthlyFee))
                         .build());
 
