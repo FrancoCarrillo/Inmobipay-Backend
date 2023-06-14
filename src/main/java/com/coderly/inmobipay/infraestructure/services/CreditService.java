@@ -137,8 +137,6 @@ public class CreditService implements ICreditService {
     @Override
     public GetPaymentScheduleResponse getMonthlyPayment(CreditRequest request) {
 
-        // TODO: CALCULAR TIR DE LA OPERACION
-
         /*
         * JSON DE PRUEBAS
         {
@@ -212,6 +210,7 @@ public class CreditService implements ICreditService {
     private GetPaymentScheduleResponse getSchedulePaymentOfInterbank(CreditRequest request) {
 
         List<CreditResponses> creditResponsesList = new ArrayList<>();
+        List<Double> flow = new ArrayList<>();
 
         //Converter COK annual to monthly
         double monthlyCok = getMonthlyCok(request.getCokRate());
@@ -227,6 +226,7 @@ public class CreditService implements ICreditService {
         double van = 0.00;
         int vanPosition = 0;
         van += getActualValueToVanOperation(vanPosition++, monthlyCok, loanAmount);
+        flow.add(loanAmount);
 
         for (short i = 0; i < request.getAmountPayments(); i++) {
             double monthlyInterest = loanAmount * monthlyEffectiveRate;
@@ -257,14 +257,14 @@ public class CreditService implements ICreditService {
             loanAmount -= amortization;
 
             van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyFee);
+            flow.add(-monthlyFee);
 
         }
-
 
         return GetPaymentScheduleResponse.builder()
                 .creditResponses(creditResponsesList)
                 .van(roundTwoDecimals(van))
-                .tir(0.00)
+                .tir(roundSevenDecimals(getTirToOperation(flow)))
                 .build();
     }
 
@@ -434,5 +434,32 @@ public class CreditService implements ICreditService {
 
     private double getActualValueToVanOperation(Integer actualPositionOfPeriod, double monthlyCok, double flowValue) {
         return flowValue / Math.pow((1 + monthlyCok), actualPositionOfPeriod);
+    }
+
+    private double getTirToOperation(List<Double> flow) {
+
+
+        double minCok = 0.0;
+        double maxCok = 24.0;
+        double tir;
+
+        while (true) {
+            double cok = (minCok + maxCok) / 2;
+            double van = 0.0;
+
+            for (int i = 0; i < flow.size(); i++) {
+                van += getActualValueToVanOperation(i , cok/100, flow.get(i));
+            }
+            if (van < 0) {
+                minCok = cok;
+            } else if (van > 0) {
+                maxCok = cok;
+            }
+
+            if (Math.abs(van) < 0.00000001) {
+                tir = cok;
+                return tir;
+            }
+        }
     }
 }
