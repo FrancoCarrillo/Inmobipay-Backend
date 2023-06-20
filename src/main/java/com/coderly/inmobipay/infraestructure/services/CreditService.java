@@ -252,6 +252,7 @@ public class CreditService implements ICreditService {
                     .postage(roundTwoDecimals(request.getPostage()))
                     .administrativeExpenses(request.getAdministrativeExpenses())
                     .fee(roundTwoDecimals(monthlyFee))
+                    .finalBalance(roundTwoDecimals(loanAmount - amortization))
                     .build());
 
             loanAmount -= amortization;
@@ -318,6 +319,7 @@ public class CreditService implements ICreditService {
                         .postage(roundTwoDecimals(request.getPostage()))
                         .administrativeExpenses(roundTwoDecimals(request.getAdministrativeExpenses()))
                         .fee(roundTwoDecimals(monthlyFee))
+                        .finalBalance(roundTwoDecimals(loanAmount - amortization))
                         .build());
 
                 loanAmount += monthlyInterest;
@@ -352,6 +354,7 @@ public class CreditService implements ICreditService {
                         .postage(roundTwoDecimals(request.getPostage()))
                         .administrativeExpenses(roundTwoDecimals(request.getAdministrativeExpenses()))
                         .fee(roundTwoDecimals(monthlyFee))
+                        .finalBalance(roundTwoDecimals(loanAmount - amortization))
                         .build());
 
                 van += getActualValueToVanOperation(vanPosition++, monthlyCok, -monthlyFee);
@@ -384,6 +387,7 @@ public class CreditService implements ICreditService {
                         .postage(roundTwoDecimals(request.getPostage()))
                         .administrativeExpenses(roundTwoDecimals(request.getAdministrativeExpenses()))
                         .fee(roundTwoDecimals(monthlyFee))
+                        .finalBalance(roundTwoDecimals(loanAmount - amortization))
                         .build());
 
                 loanAmount -= amortization;
@@ -451,7 +455,7 @@ public class CreditService implements ICreditService {
             double van = 0.0;
 
             for (int i = 0; i < flow.size(); i++) {
-                van += getActualValueToVanOperation(i , cok/100, flow.get(i));
+                van += getActualValueToVanOperation(i, cok / 100, flow.get(i));
             }
             if (van < 0) {
                 minCok = cok;
