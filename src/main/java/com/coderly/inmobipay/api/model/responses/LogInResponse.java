@@ -11,4 +11,5 @@ import lombok.Setter;
 @Setter
 public class LogInResponse {
     private String token;
+    private Long id;
 }

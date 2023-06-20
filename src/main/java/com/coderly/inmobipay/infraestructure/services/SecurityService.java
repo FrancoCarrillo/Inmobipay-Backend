@@ -46,7 +46,10 @@ public class SecurityService implements ISecurityService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtTokenUtil.generateJwtToken(authentication);
-        return new LogInResponse(jwt);
+
+        UserEntity user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow();
+
+        return new LogInResponse(jwt, user.getId());
     }
 
     @Override
