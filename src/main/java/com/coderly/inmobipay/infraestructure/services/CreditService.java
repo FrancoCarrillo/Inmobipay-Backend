@@ -52,7 +52,7 @@ public class CreditService implements ICreditService {
                 .anyMatch(c -> c.getName().equals(request.getName()));
 
         if (isDuplicateName)
-            throw new NotFoundException(String.format("Credit with %s already exists", request.getName()));
+            throw new NotFoundException(String.format("Credito con el nombre de %s ya existe", request.getName()));
 
 
         try {
@@ -82,14 +82,14 @@ public class CreditService implements ICreditService {
         }
 
 
-        return "Credit data saved successfully!!";
+        return "Credito guardado exitosamente!!";
     }
 
     @Override
     public List<GetCreditInformationResponse> getCreditByUser(Long user_id) {
 
         if (!userRepository.existsById(user_id))
-            throw new NotFoundException(String.format("User with id %s doesn't exist in the database", user_id));
+            throw new NotFoundException(String.format("Usuario con el ID de %s no existe en la base de datos", user_id));
 
         List<CreditEntity> creditEntityList = creditRepository.findByUserId(user_id);
 
@@ -124,11 +124,11 @@ public class CreditService implements ICreditService {
         try {
 
             if (!creditRepository.existsById(creditId))
-                throw new NotFoundException(String.format("Credit with id %s doesn't exist in the database", creditId));
+                throw new NotFoundException(String.format("Credito con el id %s no existe en la base de datos", creditId));
 
             creditRepository.deleteById(creditId);
 
-            return "Credit deleted successfully!!";
+            return "Credito eliminado exitosamente!!";
         } catch (Exception e) {
             throw new RuntimeException("The operation failed", e);
         }
@@ -160,7 +160,7 @@ public class CreditService implements ICreditService {
             throw new NotFoundException(violations.stream().map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining(", ")));
 
-        InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Interested rate doesn't exist"));
+        InterestRateEntity interestRate = interestRateRepository.findByType(request.getInterestRateType()).orElseThrow(() -> new NotFoundException("Tasa de interes no existe!!"));
 
         // Verify if the rate is nominal or effective
         if (interestRate.getType().equalsIgnoreCase("nominal"))
@@ -172,7 +172,7 @@ public class CreditService implements ICreditService {
 
         // Verify if the loan amount is less than the 90% of property value
         if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() < (request.getPropertyValue() * 0.075))
-            throw new NotFoundException("The loan amount is greater than the 90% of property value or less than 7.5%");
+            throw new NotFoundException("El monto del préstamo es mayor al 90% del valor de la propiedad o menor al 7.5%");
 
         // Verify if the client has a green bonus
         if (request.getIsGreenBonus())
@@ -197,7 +197,7 @@ public class CreditService implements ICreditService {
 
         // Verify if the loan amount is less than the 90% of property value
         if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() < (request.getPropertyValue() * 0.075))
-            throw new NotFoundException("The loan amount is greater than the 90% of property value or less than 7.5%");
+            throw new NotFoundException("El monto del préstamo es mayor al 90% del valor de la propiedad o menor al 7.5%");
 
         // Verify if the client has a green bonus
         if (request.getIsGreenBonus())
@@ -273,7 +273,7 @@ public class CreditService implements ICreditService {
         List<Double> flow = new ArrayList<>();
 
         if (request.getAmountPayments() != request.getGraceAndRatesRequests().size())
-            throw new NotFoundException("The amount of payments is different to the amount of grace and rates");
+            throw new NotFoundException("El monto de los pagos es diferente al monto de la gracia y tasas");
 
         //Converter COK annual to monthly
         double monthlyCok = getMonthlyCok(request.getCokRate());

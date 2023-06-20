@@ -62,15 +62,15 @@ public class SecurityService implements ISecurityService {
                     .collect(Collectors.joining(", ")));
 
         if (userRepository.existsByUsername(registerUserRequest.getUsername())) {
-            throw new NotFoundException("Username already in use");
+            throw new NotFoundException("EL username ya esta en uso");
         }
 
         if (userRepository.existsByEmail(registerUserRequest.getEmail())) {
-            throw new NotFoundException("Email is already in use");
+            throw new NotFoundException("El email ya esta en uso");
         }
 
         if (userRepository.existsByDni(registerUserRequest.getDni())) {
-            throw new NotFoundException("DNI is already in use");
+            throw new NotFoundException("El DNI ya esta en uso");
         }
 
         RoleEntity rol = rolRepository.findByName("USER");
@@ -107,7 +107,7 @@ public class SecurityService implements ISecurityService {
 
         userRepository.save(user);
 
-        return "User registered successfully!";
+        return "Registro de usuario exitoso!";
     }
 
     @Override
@@ -122,7 +122,7 @@ public class SecurityService implements ISecurityService {
 
         user.getRoles().forEach(role -> {
             if (role.getName().equals("ADMIN")) {
-                throw new NotFoundException("User already has admin role");
+                throw new NotFoundException("El usuario ya tiene el rol de admin");
             }
         });
 
