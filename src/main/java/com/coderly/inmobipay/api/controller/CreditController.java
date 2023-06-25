@@ -6,6 +6,7 @@ import com.coderly.inmobipay.api.model.requests.GracePeriodRequest;
 import com.coderly.inmobipay.api.model.responses.CreditResponses;
 import com.coderly.inmobipay.api.model.responses.GetCreditInformationResponse;
 import com.coderly.inmobipay.api.model.responses.GetPaymentScheduleResponse;
+import com.coderly.inmobipay.api.model.responses.MessageResponse;
 import com.coderly.inmobipay.core.entities.CreditEntity;
 import com.coderly.inmobipay.infraestructure.interfaces.ICreditService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,8 +33,8 @@ public class CreditController {
     @Operation(summary = "Save in system a credit information", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/save")
-    public ResponseEntity<String> saveCreditInformation(@RequestBody CreateCreditRequest creditRequest) {
-        return ResponseEntity.ok(creditService.create(creditRequest));
+    public ResponseEntity<MessageResponse> saveCreditInformation(@RequestBody CreateCreditRequest creditRequest) {
+        return ResponseEntity.ok(new MessageResponse(creditService.create(creditRequest)));
     }
 
     @Operation(summary = "Get payment schedule of credit information", security = {@SecurityRequirement(name = "bearer-key")})
@@ -60,8 +61,8 @@ public class CreditController {
     @Operation(summary = "Delete credit information", security = {@SecurityRequirement(name = "bearer-key")})
     @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{creditId}")
-    public ResponseEntity<String> deleteCreditById(@PathVariable Long creditId) {
-        return ResponseEntity.ok(creditService.deleteCreditById(creditId));
+    public ResponseEntity<MessageResponse> deleteCreditById(@PathVariable Long creditId) {
+        return ResponseEntity.ok(new MessageResponse(creditService.deleteCreditById(creditId)));
     }
 
 }

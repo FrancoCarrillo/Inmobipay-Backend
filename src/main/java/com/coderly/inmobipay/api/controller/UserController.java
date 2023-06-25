@@ -3,6 +3,7 @@ package com.coderly.inmobipay.api.controller;
 import com.coderly.inmobipay.api.model.requests.LoginRequest;
 import com.coderly.inmobipay.api.model.requests.RegisterUserRequest;
 import com.coderly.inmobipay.api.model.responses.LogInResponse;
+import com.coderly.inmobipay.api.model.responses.MessageResponse;
 import com.coderly.inmobipay.infraestructure.interfaces.ISecurityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -28,8 +29,8 @@ public class UserController {
 
     @Operation(summary = "Register in system")
     @PostMapping("auth/register")
-    public ResponseEntity<String> register(@RequestBody RegisterUserRequest signUpRequest) {
-        return ResponseEntity.ok(securityService.register(signUpRequest));
+    public ResponseEntity<MessageResponse> register(@RequestBody RegisterUserRequest signUpRequest) {
+        return ResponseEntity.ok(new MessageResponse(securityService.register(signUpRequest)));
     }
 
     @Operation(summary = "Add admin role to user", security = {@SecurityRequirement(name = "bearer-key")})
