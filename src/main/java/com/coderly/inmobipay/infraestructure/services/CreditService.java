@@ -170,6 +170,9 @@ public class CreditService implements ICreditService {
         // Verify if the client has a good payer bonus
         request.setLoanAmount(setLoanAmountByGoodPayerBonus(request.getIsGoodPayerBonus(), request.getPropertyValue(), request.getLoanAmount()));
 
+        if (request.getInitialCost() != 0)
+            request.setLoanAmount(request.getLoanAmount() + request.getInitialCost());
+
         // Verify if the loan amount is less than the 90% of property value
         if (request.getLoanAmount() > (request.getPropertyValue() * 0.9) || request.getLoanAmount() < (request.getPropertyValue() * 0.075))
             throw new NotFoundException("El monto del préstamo es mayor al 90% del valor de la propiedad o menor al 7.5%");

@@ -63,4 +63,7 @@ public class CreditRequest {
     @NotNull
     @DecimalMin(value = "0.001", inclusive = false, message = "Invalid COK value")
     private double cokRate;
+
+    @NotNull
+    private double initialCost;
 }
