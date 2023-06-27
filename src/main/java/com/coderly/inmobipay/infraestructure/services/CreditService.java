@@ -468,7 +468,7 @@ public class CreditService implements ICreditService {
 
             if (Math.abs(van) < 0.00000001) {
                 tir = cok;
-                return tir;
+                return (Math.pow(1 + tir / 100, 12) - 1) * 100;
             }
         }
     }
